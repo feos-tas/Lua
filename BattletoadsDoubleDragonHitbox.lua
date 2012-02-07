@@ -11,7 +11,7 @@ function show_boxes()
    
 	gui.text(170,  1,"CamX " .. CamX)
 	gui.text(170, 9,"CamY " .. CamY)
-	gui.text(170, 17,"CamS " .. CamX - LastCamX) -- X scrolling speed
+	gui.text(170, 17,"Scrol " .. CamX - LastCamX) -- X scrolling speed
    
 	-- Player 1 position
 	X1 = memory.readbyteunsigned(0x3FE) + 256*memory.readbytesigned(0x3EF)
@@ -42,19 +42,15 @@ function show_boxes()
 	gui.text(237,  9, ScrY2-8, "#aaffffff") -- When it is 255, jump from the void
    
 	-- Player 1 hitbox, shadow and horizontal speed
-	--[[
-	gui.box( ScrX1-10, ScrY1-30, ScrX1+10, ScrY1, "#ffcc0000")
+	gui.box( ScrX1-10, ScrY1-30, ScrX1+10, ScrY1, "#ffccaa00")
 	gui.box( ScrX1-10, memory.readbyteunsigned(0x494)+8, ScrX1+10,
-			memory.readbyteunsigned(0x494)+10, "#ffcc0000")
-	]]
+			memory.readbyteunsigned(0x494)+10, "#ffccaa00")
 	gui.text(ScrX1- 9, ScrY1-16,  memory.readbyteunsigned(0x566), "#ffccaaff")
       
 	-- Player 2 hitbox, shadow and horizontal speed
-	--[[
 	gui.box( ScrX2-10, ScrY2-30, ScrX2+10, ScrY2, "#00ff8800")
 	gui.box( ScrX2-10, memory.readbyteunsigned(0x495)+8, ScrX2+10,
 			memory.readbyteunsigned(0x495)+10, "#00ff8800")
-	]]
 	gui.text(ScrX2- 9, ScrY2-8, memory.readbyteunsigned(0x567), "#aaffffff")
    
 	LastCamX = CamX
