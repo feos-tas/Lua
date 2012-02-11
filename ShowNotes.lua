@@ -1,3 +1,5 @@
+-- Old version
+
 function ShowNotes() 
 	note = taseditor.getnote(taseditor.getmarker(movie.framecount()))
 	if string.len (note) >= 50

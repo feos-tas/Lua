@@ -52,7 +52,7 @@ function drawpad(padnum,padx,pady)
 		gui.line (padx+26, pady+2, padx+28, pady+2, color)
 	end   
    
-	if (controller.start) then                            -- ######
+	if (controller.start) then                             -- ######
 		gui.line (padx+33, pady+1, padx+38, pady+1, color) --   ##
 		gui.line (padx+35, pady+2, padx+35, pady+5, color) --   ##
 		gui.line (padx+36, pady+2, padx+36, pady+5, color) --   ##
@@ -89,24 +89,24 @@ end
 function movable()
 
 	keys = input.get()
-   
+
 	gui.box(x, y, x+62, y+15, "#00000080")
-   
-	if keys.xmouse >= ( x ) and keys.xmouse <= ( x + 62 ) then
-		if keys.ymouse >= ( y-10 ) and keys.ymouse <= ( y + 25 ) then 
+
+	if keys.xmouse >= x and keys.xmouse <= x+62 then
+		if keys.ymouse >= y-10 and keys.ymouse <= y+25 then 
 			if keys["leftclick"] then 
 				x = keys.xmouse - 31
 				y = keys.ymouse - 7
 			end 
 		end
 	end 
-   
+
 	if x < 0 then x = 0 elseif x > 193 then x = 193 end
 	if y < 0 then y = 0 elseif y > 216 then y = 216 end
-   
+
 	if (pad1 == 1) then drawpad(1, padx, pady) end 
 	if (pad2 == 1) then drawpad(2, padx, pady) end 
-    
+
 end
  
 gui.register(movable)
