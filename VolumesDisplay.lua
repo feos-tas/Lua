@@ -75,7 +75,7 @@ function Draw()
 		end
 	end
 
-	-- Delete this operation, it causes FCEUX to lag :P
+	-- Delete this operation, it's useless :P
 	if iterator == 1 then gui.text(45*5-11, 9, "Hint:\nleftclick\nover the\ndisplay")
 	else gui.text(45*5-11, 9, "WHAT\nHAVE\nYOU\nDONE\n?!"); print("MAKE IT STOP!!!")
 	end
