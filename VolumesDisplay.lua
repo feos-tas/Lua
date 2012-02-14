@@ -6,8 +6,8 @@ iterator = 1
 prev_keys = input.get()
 
 volumes = {
-	S1V = {}, S1C = {}, S1D = {},
-	S2V = {}, S2C = {}, S2D = {},
+	S1V = {}, S1C = {},
+	S2V = {}, S2C = {},
 	TV = {},
 	NV = {},
 	DPCMV = {}
@@ -19,8 +19,8 @@ function Draw()
 
 	if #volumes.S1V == 0 then
 		channels = {
-			Square1  = {x=1,      y=9, vol=volumes.S1V, color=volumes.S1C, duty=volumes.duty},
-			Square2  = {x=1+45*1, y=9, vol=volumes.S2V, color=volumes.S2C, duty=volumes.duty},
+			Square1  = {x=1,      y=9, vol=volumes.S1V, color=volumes.S1C, duty=0},
+			Square2  = {x=1+45*1, y=9, vol=volumes.S2V, color=volumes.S2C, duty=0},
 			Triangle = {x=1+45*2, y=9, vol=volumes.TV},
 			Noise    = {x=1+45*3, y=9, vol=volumes.NV},
 			DPCM     = {x=1+45*4, y=9, vol=volumes.DPCMV}
