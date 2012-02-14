@@ -26,6 +26,6 @@ gui.register(function()
 	gui.text(xgui,    ygui+24, "Cam:",        "green")
 	gui.text(xgui+23, ygui+24, xcam,         "yellow")
 	gui.text(xgui+60, ygui+24, ycam,         "yellow")
-	gui.text(xscr-18,  yscr-7, "I'm here!",   "green")
+	gui.text(xscr-18, yscr-7,  "I'm here!",   "green")
 
 end)
