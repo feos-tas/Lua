@@ -102,9 +102,9 @@ function Draw()
 				if name == "Triangle" then color = "#00aaffff" else color = "#ff0000ff" end
 				if     chan.semitone == "C#" then gui.box (kb.x+3 +28*(chan.octave-1), kb.y, kb.x+5 +28*(chan.octave-1), kb.y+10, color)
 				elseif chan.semitone == "D#" then gui.box (kb.x+7 +28*(chan.octave-1), kb.y, kb.x+9 +28*(chan.octave-1), kb.y+10, color)
-				elseif chan.semitone == "F#" then gui.box (kb.x+11+28*(chan.octave-1), kb.y, kb.x+13+28*(chan.octave-1), kb.y+10, color)
-				elseif chan.semitone == "G#" then gui.box (kb.x+15+28*(chan.octave-1), kb.y, kb.x+17+28*(chan.octave-1), kb.y+10, color)
-				elseif chan.semitone == "A#" then gui.box (kb.x+19+28*(chan.octave-1), kb.y, kb.x+21+28*(chan.octave-1), kb.y+10, color)
+				elseif chan.semitone == "F#" then gui.box (kb.x+15+28*(chan.octave-1), kb.y, kb.x+17+28*(chan.octave-1), kb.y+10, color)
+				elseif chan.semitone == "G#" then gui.box (kb.x+19+28*(chan.octave-1), kb.y, kb.x+21+28*(chan.octave-1), kb.y+10, color)
+				elseif chan.semitone == "A#" then gui.box (kb.x+23+28*(chan.octave-1), kb.y, kb.x+25+28*(chan.octave-1), kb.y+10, color)
 				end
 			end
 		end
