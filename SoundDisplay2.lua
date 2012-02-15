@@ -25,7 +25,7 @@ function Draw()
 	
 	if #volumes.S1V == 0 then
 		channels = {
-			Square1  = {x=1,      y=9, vol=volumes.S1V, color=volumes.S1C,duty=0, midi=0, semitone=0, octave=0},
+			Square1  = {x=1,      y=9, vol=volumes.S1V, color=volumes.S1C, duty=0, midi=0, semitone=0, octave=0},
 			Square2  = {x=1+45*1, y=9, vol=volumes.S2V, color=volumes.S2C, duty=0, midi=0, semitone=0, octave=0},
 			Triangle = {x=1+45*2, y=9, vol=volumes.TV, midi=0, semitone=0, octave=0},
 			Noise    = {x=1+45*3, y=9, vol=volumes.NV, midi=0, semitone=0, octave=0},
