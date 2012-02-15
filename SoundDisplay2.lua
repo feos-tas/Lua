@@ -1,6 +1,4 @@
 -- feos, 2012
--- See what happens with sound channels volumes
--- Have fun!
 
 print("Leftclick over the displays:")
 print("channel names to see volumes,")
@@ -30,7 +28,7 @@ function Draw()
 			Square1  = {x=1,      y=9, vol=volumes.S1V, color=volumes.S1C,duty=0, midi=0, semitone=0, octave=0},
 			Square2  = {x=1+45*1, y=9, vol=volumes.S2V, color=volumes.S2C, duty=0, midi=0, semitone=0, octave=0},
 			Triangle = {x=1+45*2, y=9, vol=volumes.TV, midi=0, semitone=0, octave=0},
-			Noise    = {x=1+45*3, y=9, vol=volumes.NV},
+			Noise    = {x=1+45*3, y=9, vol=volumes.NV, midi=0, semitone=0, octave=0},
 			DPCM     = {x=1+45*4, y=9, vol=volumes.DPCMV}
 		}
 	end
@@ -46,10 +44,11 @@ function Draw()
 	channels.Square1.midi = snd.rp2a03.square1.midikey
 	channels.Square2.midi = snd.rp2a03.square2.midikey
 	channels.Triangle.midi = snd.rp2a03.triangle.midikey
+	channels.Noise.midi = snd.rp2a03.noise.midikey
 
 	-- Guess notes
 	for name, chan in pairs(channels) do
-		if name == "Square1" or name == "Square2" or name == "Triangle" then
+		if name == "Square1" or name == "Square2" or name == "Triangle" or name == "Noise" then
 			if chan.vol[1] > 0 then
 				chan.octave = math.floor((chan.midi - 12) / 12)
 				chan.semitone = tostring(semitones[math.floor((chan.midi - 21) % 12) + 1])
@@ -59,9 +58,11 @@ function Draw()
 	end
 	
 	--Keyboard
-	gui.text(kb.x+205, kb.y-1,  "S1: "..channels.Square1.semitone..channels.Square1.octave, "#ff0000ff", "#000000ff")
-	gui.text(kb.x+205, kb.y+8,  "S2: "..channels.Square2.semitone..channels.Square2.octave, "#ff0000ff", "#000000ff")
-	gui.text(kb.x+206, kb.y+17, "Tr: "..channels.Triangle.semitone..channels.Triangle.octave, "#00aaffff", "#000000ff")
+	color = "#ff0000ff"
+	gui.text(kb.x+203, kb.y-1,  "S1: "..channels.Square1.semitone..channels.Square1.octave, color, "#000000ff")
+	gui.text(kb.x+203, kb.y+8,  "S2: "..channels.Square2.semitone..channels.Square2.octave, color, "#000000ff")
+	gui.text(kb.x+204, kb.y+17, "Tr: "..channels.Triangle.semitone..channels.Triangle.octave, "#00aaffff", "#000000ff")
+	gui.text(kb.x+204, kb.y+26, "Ns: "..channels.Noise.semitone..channels.Noise.octave, "ffffffff", "#000000ff")
 	
 	if (kb.on) then
 		if  keys.xmouse <= 256 and keys.xmouse >= 205 and keys.ymouse >= 154 and keys.ymouse <= 181 then
@@ -73,14 +74,14 @@ function Draw()
 		
 		for name, chan in pairs(channels) do
 			if name == "Square1" or name == "Square2" or name == "Triangle" then
-				if name == "Triangle" then color1 = "#00aaffff" else color1 = "#ff0000ff" end
-				if     chan.semitone == "C-" then gui.box (kb.x+1 +28*(chan.octave-1), kb.y, kb.x+3 +28*(chan.octave-1), kb.y+16, color1)
-				elseif chan.semitone == "D-" then gui.box (kb.x+5 +28*(chan.octave-1), kb.y, kb.x+7 +28*(chan.octave-1), kb.y+16, color1)
-				elseif chan.semitone == "E-" then gui.box (kb.x+9 +28*(chan.octave-1), kb.y, kb.x+11+28*(chan.octave-1), kb.y+16, color1)
-				elseif chan.semitone == "F-" then gui.box (kb.x+13+28*(chan.octave-1), kb.y, kb.x+15+28*(chan.octave-1), kb.y+16, color1)
-				elseif chan.semitone == "G-" then gui.box (kb.x+17+28*(chan.octave-1), kb.y, kb.x+19+28*(chan.octave-1), kb.y+16, color1)
-				elseif chan.semitone == "A-" then gui.box (kb.x+21+28*(chan.octave-1), kb.y, kb.x+23+28*(chan.octave-1), kb.y+16, color1)
-				elseif chan.semitone == "B-" then gui.box (kb.x+25+28*(chan.octave-1), kb.y, kb.x+27+28*(chan.octave-1), kb.y+16, color1)
+				if name == "Triangle" then color = "#00aaffff" else color = "#ff0000ff" end
+				if     chan.semitone == "C-" then gui.box (kb.x+1 +28*(chan.octave-1), kb.y, kb.x+3 +28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "D-" then gui.box (kb.x+5 +28*(chan.octave-1), kb.y, kb.x+7 +28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "E-" then gui.box (kb.x+9 +28*(chan.octave-1), kb.y, kb.x+11+28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "F-" then gui.box (kb.x+13+28*(chan.octave-1), kb.y, kb.x+15+28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "G-" then gui.box (kb.x+17+28*(chan.octave-1), kb.y, kb.x+19+28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "A-" then gui.box (kb.x+21+28*(chan.octave-1), kb.y, kb.x+23+28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "B-" then gui.box (kb.x+25+28*(chan.octave-1), kb.y, kb.x+27+28*(chan.octave-1), kb.y+16, color)
 				end
 			end
 		end
@@ -96,15 +97,14 @@ function Draw()
 			gui.box(kb.x+19+28*oct, kb.y, kb.x+21+28*oct, kb.y+10, "#00000000")
 			gui.box(kb.x+23+28*oct, kb.y, kb.x+25+28*oct, kb.y+10, "#00000000")
 		end
-		
 		for name, chan in pairs(channels) do
 			if name == "Square1" or name == "Square2" or name == "Triangle" then
-				if name == "Triangle" then color2 = "#00aaffff" else color2 = "#ff0000ff" end
-				if     chan.semitone == "C#" then gui.box (kb.x+3 +28*(chan.octave-1), kb.y, kb.x+5 +28*(chan.octave-1), kb.y+10, color2)
-				elseif chan.semitone == "D#" then gui.box (kb.x+7 +28*(chan.octave-1), kb.y, kb.x+9 +28*(chan.octave-1), kb.y+10, color2)
-				elseif chan.semitone == "F#" then gui.box (kb.x+11+28*(chan.octave-1), kb.y, kb.x+13+28*(chan.octave-1), kb.y+10, color2)
-				elseif chan.semitone == "G#" then gui.box (kb.x+15+28*(chan.octave-1), kb.y, kb.x+17+28*(chan.octave-1), kb.y+10, color2)
-				elseif chan.semitone == "A#" then gui.box (kb.x+19+28*(chan.octave-1), kb.y, kb.x+21+28*(chan.octave-1), kb.y+10, color2)
+				if name == "Triangle" then color = "#00aaffff" else color = "#ff0000ff" end
+				if     chan.semitone == "C#" then gui.box (kb.x+3 +28*(chan.octave-1), kb.y, kb.x+5 +28*(chan.octave-1), kb.y+10, color)
+				elseif chan.semitone == "D#" then gui.box (kb.x+7 +28*(chan.octave-1), kb.y, kb.x+9 +28*(chan.octave-1), kb.y+10, color)
+				elseif chan.semitone == "F#" then gui.box (kb.x+11+28*(chan.octave-1), kb.y, kb.x+13+28*(chan.octave-1), kb.y+10, color)
+				elseif chan.semitone == "G#" then gui.box (kb.x+15+28*(chan.octave-1), kb.y, kb.x+17+28*(chan.octave-1), kb.y+10, color)
+				elseif chan.semitone == "A#" then gui.box (kb.x+19+28*(chan.octave-1), kb.y, kb.x+21+28*(chan.octave-1), kb.y+10, color)
 				end
 			end
 		end
