@@ -167,9 +167,7 @@ function Draw()
 			end
 			table.remove(chan.vol, 16)
 		end
-		if chan.vol[1] > 0 and iterator > 1 then
-			gui.box(chan.x+12, chan.y+8, chan.x+14+chan.vol[1]*2, chan.y+18, "#ffaaaa00")
-		end		
+		if chan.vol[1] > 0 then gui.box(chan.x+12, chan.y+8, chan.x+14+chan.vol[1]*2, chan.y+18, "#ffaaaa00") end
 	end	
 	prev_keys = keys
 end
