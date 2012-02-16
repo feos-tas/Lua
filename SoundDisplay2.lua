@@ -12,9 +12,10 @@ kb = {x=9, y=155, on=true}
 prev_kb = kb.on
 prev_keys = input.get()
 semitones = {"A-", "A#", "B-", "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#"}
-message = "Presss here to  \n              \ndump notes to file"
+message = " Presss here to  \n               \n dump notes to file"
 filenum = 1
 dumping = false
+header = true
 
 volumes = {
 	S1V = {0}, S1C = {},
@@ -63,6 +64,8 @@ function Draw()
 				chan.semitone = tostring(semitones[math.floor((chan.midi - 21) % 12) + 1])
 			else chan.semitone = "--"; chan.octave = "-"
 			end
+			if string.len(chan.octave) < 2 then chan.octave = chan.octave.." " end
+			if chan.vol[1] < 10 then chan.vol[1] = " "..chan.vol[1] end
 		end
 	end
 	
@@ -158,7 +161,7 @@ function Draw()
 		if iterator <=14 then
 			-- draw just first volume values
 			gui.text(chan.x, chan.y+9+1, chan.vol[1])
-			if chan.vol[1] > 0 then
+			if tonumber(chan.vol[1]) > 0 then
 				for j = 0, chan.vol[1]-1 do
 					gui.box(chan.x+13+j*2, chan.y+9, chan.x+15+j*2, chan.y+8+9, "#000000ff")
 					gui.line(chan.x+14+j*2, chan.y+1+9, chan.x+14+j*2, chan.y+7+9, "#00ff00ff")
@@ -173,7 +176,7 @@ function Draw()
 			-- draw all 15 volume values
 			for i = 1, #chan.vol do
 				gui.text(chan.x, chan.y+i*9+1, chan.vol[i])
-				if chan.vol[i] > 0 then
+				if tonumber(chan.vol[i]) > 0 then
 					for j = 0, chan.vol[i]-1 do
 						gui.box(chan.x+13+j*2, chan.y+i*9, chan.x+15+j*2, chan.y+8+i*9, "#000000ff")
 						gui.line(chan.x+14+j*2, chan.y+1+i*9, chan.x+14+j*2, chan.y+7+i*9, "#00ff00ff")
@@ -189,7 +192,7 @@ function Draw()
 		-- keep the table limited
 		table.remove(chan.vol, 15)
 		-- highlight the first values
-		if chan.vol[1] > 0 then
+		if tonumber(chan.vol[1]) > 0 then
 			gui.box(chan.x+12, chan.y+8, chan.x+14+chan.vol[1]*2, chan.y+18, "#ffaaaa00")
 		end
 	end	
@@ -203,6 +206,7 @@ function Draw()
 		if keys.xmouse <= 200 and keys.xmouse >= 100 and keys.ymouse >= 185 and keys.ymouse <= 210 then
 			if keys["leftclick"] and not prev_keys["leftclick"] then
 				dumping = true
+				header = true
 				-- load the memory off a bit
 				-- store the previous modes for volumes and keyboard
 				if iterator == 15 then prev_iterator = 15; iterator = 1 else prev_iterator = 1 end
@@ -212,31 +216,40 @@ function Draw()
 	else
 		if keys.xmouse <= 200 and keys.xmouse >= 100 and keys.ymouse >= 185 and keys.ymouse <= 210 then
 			if keys["leftclick"] and not prev_keys["leftclick"] then
+				DumpFile = io.open("Music Dump - "..filenum..".txt" , "a+")
+				DumpFile:write("||--------------||--------------||----------||----------||\n\n")
+				DumpFile:write("End frame = "..emu.framecount()                                )
+				DumpFile:close()
 				dumping = false
-				message = "Finished!\n\nDump another file"
+				message = " Finished!       \n              \n Dump another file"
 				if kb.on == true then kb.on = false end
 				-- restore the previous modes for keyboard and volumes
 				iterator = prev_iterator; kb.on = prev_kb
+				filenum = filenum + 1
+				header = true
 			end
 		end
 	end
 	
 	if dumping == true then
-		message = " Processing... \n           \nStop dumping"
-	
-	
-	
-	
-
+		message = " Processing... \n           \n Stop dumping "
+		if header == true then
+			DumpFile = io.open("Music Dump - "..filenum..".txt" , "w+")
+			DumpFile:write("Start frame = "..emu.framecount().."\n\n"                  )
+			DumpFile:write("||--------------||--------------||----------||----------||\n")
+			DumpFile:write("||   Square 1   ||   Square 2   || Triangle ||   Noise  ||\n")
+			DumpFile:write("||--------------||--------------||----------||----------||\n")
+			DumpFile:write("||Note |Vol |Dut||Note |Vol |Dut||Note |Vol ||Note |Vol ||\n")
+			DumpFile:write("||-----|----|---||-----|----|---||-----|----||-----|----||\n")
+			header = false
+		else
+			DumpFile = io.open("Music Dump - "..filenum..".txt" , "a+")
+			DumpFile:write(emu.framecount().."|| "..channels.Square1.semitone..channels.Square1.octave.."| "..channels.Square1.vol[1].." | "..channels.Square1.duty.." ")
+			DumpFile:write("|| "..channels.Square2.semitone..channels.Square2.octave.."| "..channels.Square2.vol[1].." | "..channels.Square2.duty.." ")
+			DumpFile:write("|| "..channels.Triangle.semitone..channels.Triangle.octave.."| "..channels.Triangle.vol[1].." ")
+			DumpFile:write("|| "..channels.Noise.semitone..channels.Noise.octave.."| "..channels.Noise.vol[1].." ||\n")
+		end
 	end
-		
-		
-		
-		
-		
-		
-	
-	
 	prev_keys = keys
 end
 emu.registerafter(Draw);
