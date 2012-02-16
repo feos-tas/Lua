@@ -1,29 +1,29 @@
 -- feos, 2012
 
 print("Leftclick over the displays:")
-print("channel names to see volumes,")
-print("notes for a keyboard.")
+print("channel names to hide the volumes,")
+print("notes to hide the keyboard.")
 print(" ")
 print("And praise Gocha!")
 
-iterator = 1
-kb = {x=9, y=155, on=false}
+iterator = 15
+kb = {x=9, y=155, on=true}
 prev_keys = input.get()
 semitones = {"A-", "A#", "B-", "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#"}
 
 volumes = {
-	S1V = {}, S1C = {},
-	S2V = {}, S2C = {},
-	TV = {},
-	NV = {},
-	DPCMV = {}
+	S1V = {0}, S1C = {},
+	S2V = {0}, S2C = {},
+	TV = {0},
+	NV = {0},
+	DPCMV = {0}
 }
 
 function Draw()
 	snd = sound.get()
 	keys = input.get()
 	
-	if #volumes.S1V == 0 then
+	if #volumes.S1V == 1 then
 		channels = {
 			Square1  = {x=1,      y=9, vol=volumes.S1V, color=volumes.S1C, duty=0, midi=0, semitone=0, octave=0},
 			Square2  = {x=1+45*1, y=9, vol=volumes.S2V, color=volumes.S2C, duty=0, midi=0, semitone=0, octave=0},
@@ -35,9 +35,9 @@ function Draw()
 
 	table.insert(channels.Square1.vol, 1, snd.rp2a03.square1.volume*15)
 	table.insert(channels.Square2.vol, 1, snd.rp2a03.square2.volume*15)
-	table.insert(channels.Triangle.vol, 1, snd.rp2a03.triangle.volume)
+	table.insert(channels.Triangle.vol, 1, snd.rp2a03.triangle.volume*15)
 	table.insert(channels.Noise.vol, 1, snd.rp2a03.noise.volume*15)
-	table.insert(channels.DPCM.vol, 1, snd.rp2a03.dpcm.volume)
+	table.insert(channels.DPCM.vol, 1, snd.rp2a03.dpcm.volume*15)
 
 	channels.Square1.duty = snd.rp2a03.square1.duty
 	channels.Square2.duty = snd.rp2a03.square2.duty
@@ -126,33 +126,31 @@ function Draw()
 			end
 		end
 		
-		if iterator == 1 then
+		if iterator == 15 then
 			if keys.ymouse <= 24 and keys.ymouse >= 0 then
-				if keys["leftclick"] and not prev_keys["leftclick"] then iterator = #chan.vol end
+				if keys["leftclick"] and not prev_keys["leftclick"] then iterator = 1 end
 			end
 		else
 			if keys.ymouse <= 24 and keys.ymouse >= 0 then
-				if keys["leftclick"] and not prev_keys["leftclick"] then iterator = 1 end
+				if keys["leftclick"] and not prev_keys["leftclick"] then iterator = 15 end
 			end
 		end
 		
 		gui.text(chan.x, 9, name, "#ffffffff", "#000000ff")	
-		if iterator <=15 then
-			for i = 1, iterator do
-				gui.text(chan.x, chan.y+i*9+1, chan.vol[i])
-				if chan.vol[i] > 0 then
-					for j = 0, chan.vol[i]-1 do
-						gui.box(chan.x+13+j*2, chan.y+i*9, chan.x+15+j*2, chan.y+8+i*9, "#000000ff")
-						gui.line(chan.x+14+j*2, chan.y+1+i*9, chan.x+14+j*2, chan.y+7+i*9, "#00ff00ff")
-						if name == "Square1" or name == "Square2" then
-							gui.text(chan.x+38, chan.y, chan.duty, chan.color[1], "#000000ff")
-							gui.line(chan.x+14+j*2, chan.y+1+i*9, chan.x+14+j*2, chan.y+7+i*9, chan.color[i])
-						end
+		if iterator <=14 then
+			gui.text(chan.x, chan.y+9+1, chan.vol[1])
+			if chan.vol[1] > 0 then
+				for j = 0, chan.vol[1]-1 do
+					gui.box(chan.x+13+j*2, chan.y+9, chan.x+15+j*2, chan.y+8+9, "#000000ff")
+					gui.line(chan.x+14+j*2, chan.y+1+9, chan.x+14+j*2, chan.y+7+9, "#00ff00ff")
+					if name == "Square1" or name == "Square2" then
+						gui.text(chan.x+38, chan.y, chan.duty, chan.color[1], "#000000ff")
+						gui.line(chan.x+14+j*2, chan.y+1+9, chan.x+14+j*2, chan.y+7+9, chan.color[1])
 					end
 				end
 			end
 		else
-			for i = 1, 15 do
+			for i = 1, #chan.vol do
 				gui.text(chan.x, chan.y+i*9+1, chan.vol[i])
 				if chan.vol[i] > 0 then
 					for j = 0, chan.vol[i]-1 do
@@ -165,8 +163,8 @@ function Draw()
 					end
 				end
 			end
-			table.remove(chan.vol, 16)
 		end
+		table.remove(chan.vol, 15)
 		if chan.vol[1] > 0 then gui.box(chan.x+12, chan.y+8, chan.x+14+chan.vol[1]*2, chan.y+18, "#ffaaaa00") end
 	end	
 	prev_keys = keys
