@@ -235,7 +235,7 @@ function Draw()
 		message = " Processing... \n           \n Stop dumping "
 		if header == true then
 			DumpFile = io.open("Music Dump - "..filenum..".txt" , "w+")
-			DumpFile:write("Start frame = "..emu.framecount().."\n\n"                  )
+			DumpFile:write("Start frame = "..emu.framecount().."\n\n"                    )
 			DumpFile:write("||--------------||--------------||----------||----------||\n")
 			DumpFile:write("||   Square 1   ||   Square 2   || Triangle ||   Noise  ||\n")
 			DumpFile:write("||--------------||--------------||----------||----------||\n")
