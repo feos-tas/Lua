@@ -1,21 +1,16 @@
 -- feos, 2012
 
-print("Leftclick over the displays:")
-print("channel names to hide the volumes,")
-print("notes to hide the keyboard.")
+print("Leftclick over the displays: channel names to hide the volumes, notes to hide the keyboard.")
 print(" ")
 print("And praise Gocha!")
+print(" ")
+print("Hi-hat and keys may glitch if you produce sound effects.")
 
 iterator = 15
-prev_iterator = iterator
 kb = {x=9, y=155, on=true}
 prev_kb = kb.on
 prev_keys = input.get()
-semitones = {"A-", "A#", "B-", "C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#"}
-message = " Presss here to  \n               \n dump notes to file"
-filenum = 1
-dumping = false
-header = true
+semitones = {"A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"}
 
 volumes = {
 	S1V = {0}, S1C = {},
@@ -51,6 +46,7 @@ function Draw()
 	-- get duty and midikey for proper channels
 	channels.Square1.duty = snd.rp2a03.square1.duty
 	channels.Square2.duty = snd.rp2a03.square2.duty
+	
 	channels.Square1.midi = snd.rp2a03.square1.midikey
 	channels.Square2.midi = snd.rp2a03.square2.midikey
 	channels.Triangle.midi = snd.rp2a03.triangle.midikey
@@ -64,8 +60,6 @@ function Draw()
 				chan.semitone = tostring(semitones[math.floor((chan.midi - 21) % 12) + 1])
 			else chan.semitone = "--"; chan.octave = "-"
 			end
-			if string.len(chan.octave) < 2 then chan.octave = chan.octave.." " end
-			if chan.vol[1] < 10 then chan.vol[1] = " "..chan.vol[1] end
 		end
 	end
 	
@@ -76,6 +70,56 @@ function Draw()
 	gui.text(kb.x+204, kb.y+17, "Tr: "..channels.Triangle.semitone..channels.Triangle.octave, "#00aaffff", "#000000ff")
 	gui.text(kb.x+204, kb.y+26, "Ns: "..channels.Noise.semitone..channels.Noise.octave, "ffffffff", "#000000ff")
 
+-----------------
+-- Draw hi-hat --
+-----------------
+
+	xhh1 = 227
+	yhh1 = 18
+	xhh2 = 227
+	yhh2 = 18
+	
+	if channels.Noise.vol[1] > 0 then 
+		if channels.Noise.octave >= 9 and channels.Noise.octave <= 13 then
+			colorhh = "#ffaa00"
+			if channels.Noise.vol[2] - channels.Noise.vol[1] < 4
+			and channels.Noise.vol[2] > 0
+			then yhh1 = 15
+			end
+		end
+	else colorhh = "#000000ff"
+	end
+	
+
+
+	gui.line(xhh1-1,  yhh1,   xhh1+28, yhh1,   "#000000ff")
+	gui.line(xhh1-1,  yhh1-1, xhh1+28, yhh1-1, "#000000ff")
+	gui.line(xhh1-1,  yhh1-2, xhh1+28, yhh1-2, "#000000ff")
+	gui.line(xhh1+3,  yhh1-3, xhh1+24, yhh1-3, "#000000ff")
+	gui.line(xhh1+8,  yhh1-4, xhh1+19, yhh1-4, "#000000ff")
+	gui.line(xhh1+11, yhh1-5, xhh1+16, yhh1-5, "#000000ff")
+	gui.line(xhh1+12, yhh1-6, xhh1+15, yhh1-6, "#000000ff")
+	
+	gui.line(xhh2-1,  yhh2,   xhh2+28, yhh2,   "#000000ff")
+	gui.line(xhh2-1,  yhh2+1, xhh2+28, yhh2+1, "#000000ff")
+	gui.line(xhh2-1,  yhh2+2, xhh2+28, yhh2+2, "#000000ff")
+	gui.line(xhh2+3,  yhh2+3, xhh2+24, yhh2+3, "#000000ff")
+	gui.line(xhh2+8,  yhh2+4, xhh2+19, yhh2+4, "#000000ff")
+	gui.line(xhh2+11, yhh2+5, xhh2+16, yhh2+5, "#000000ff")
+	gui.line(xhh2+12, yhh2+6, xhh2+15, yhh2+6, "#000000ff")	
+
+	gui.line(xhh1,    yhh1-1, xhh1+27, yhh1-1, colorhh)
+	gui.line(xhh1+4,  yhh1-2, xhh1+23, yhh1-2, colorhh)
+	gui.line(xhh1+9,  yhh1-3, xhh1+18, yhh1-3, colorhh)
+	gui.line(xhh1+12, yhh1-4, xhh1+15, yhh1-4, colorhh)
+	gui.line(xhh1+13, yhh1-5, xhh1+14, yhh1-5, colorhh)
+	
+	gui.line(xhh2,    yhh2+1, xhh2+27, yhh2+1, colorhh)
+	gui.line(xhh2+4,  yhh2+2, xhh2+23, yhh2+2, colorhh)
+	gui.line(xhh2+9,  yhh2+3, xhh2+18, yhh2+3, colorhh)
+	gui.line(xhh2+12, yhh2+4, xhh2+15, yhh2+4, colorhh)
+	gui.line(xhh2+13, yhh2+5, xhh2+14, yhh2+5, colorhh)	
+	
 --------------------
 -- Keyboard stuff --
 --------------------
@@ -92,21 +136,21 @@ function Draw()
 			-- draw colored boxes as clean notes
 			if name == "Square1" or name == "Square2" or name == "Triangle" then
 				if name == "Triangle" then color = "#00aaffff" else color = "#ff0000ff" end
-				if     chan.semitone == "C-" then gui.box (kb.x+1 +28*(chan.octave-1), kb.y, kb.x+3 +28*(chan.octave-1), kb.y+16, color)
-				elseif chan.semitone == "D-" then gui.box (kb.x+5 +28*(chan.octave-1), kb.y, kb.x+7 +28*(chan.octave-1), kb.y+16, color)
-				elseif chan.semitone == "E-" then gui.box (kb.x+9 +28*(chan.octave-1), kb.y, kb.x+11+28*(chan.octave-1), kb.y+16, color)
-				elseif chan.semitone == "F-" then gui.box (kb.x+13+28*(chan.octave-1), kb.y, kb.x+15+28*(chan.octave-1), kb.y+16, color)
-				elseif chan.semitone == "G-" then gui.box (kb.x+17+28*(chan.octave-1), kb.y, kb.x+19+28*(chan.octave-1), kb.y+16, color)
-				elseif chan.semitone == "A-" then gui.box (kb.x+21+28*(chan.octave-1), kb.y, kb.x+23+28*(chan.octave-1), kb.y+16, color)
-				elseif chan.semitone == "B-" then gui.box (kb.x+25+28*(chan.octave-1), kb.y, kb.x+27+28*(chan.octave-1), kb.y+16, color)
+				if     chan.semitone == "C" then gui.box (kb.x+1 +28*(chan.octave-1), kb.y, kb.x+3 +28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "D" then gui.box (kb.x+5 +28*(chan.octave-1), kb.y, kb.x+7 +28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "E" then gui.box (kb.x+9 +28*(chan.octave-1), kb.y, kb.x+11+28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "F" then gui.box (kb.x+13+28*(chan.octave-1), kb.y, kb.x+15+28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "G" then gui.box (kb.x+17+28*(chan.octave-1), kb.y, kb.x+19+28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "A" then gui.box (kb.x+21+28*(chan.octave-1), kb.y, kb.x+23+28*(chan.octave-1), kb.y+16, color)
+				elseif chan.semitone == "B" then gui.box (kb.x+25+28*(chan.octave-1), kb.y, kb.x+27+28*(chan.octave-1), kb.y+16, color)
 				end
 			end
 		end		
 		-- draw accidental keys
 		gui.box(kb.x-3, kb.y, kb.x-5, kb.y+10, "#00000000")
-		gui.text(kb.x+1+28*7, kb.y+17, "8")
+		gui.text(kb.x+28*7, kb.y+17, "8")
 		for oct = 0, 6 do
-			gui.text(kb.x+1+28*oct, kb.y+17, oct+1) -- draw octave number at the proper place
+			gui.text(kb.x+28*oct, kb.y+17, oct+1) -- draw octave number at the proper place
 			gui.box(kb.x+3+28*oct, kb.y, kb.x+5+28*oct, kb.y+10, "#00000000")
 			gui.box(kb.x+7+28*oct, kb.y, kb.x+9+28*oct, kb.y+10, "#00000000")
 			gui.box(kb.x+15+28*oct, kb.y, kb.x+17+28*oct, kb.y+10, "#00000000")
@@ -192,64 +236,10 @@ function Draw()
 		-- keep the table limited
 		table.remove(chan.vol, 15)
 		-- highlight the first values
-		if tonumber(chan.vol[1]) > 0 then
-			gui.box(chan.x+12, chan.y+8, chan.x+14+chan.vol[1]*2, chan.y+18, "#ffaaaa00")
+		if chan.vol[1] > 0 then
+			gui.box(chan.x+12, chan.y+8, chan.x+14+chan.vol[1]*2, chan.y+18, "#ffaa0000")
 		end
 	end	
-	
--------------------
--- Sound dumping --
--------------------
-
-	gui.text(100, 185, message, "white", "black")
-	if dumping == false then
-		if keys.xmouse <= 200 and keys.xmouse >= 100 and keys.ymouse >= 185 and keys.ymouse <= 210 then
-			if keys["leftclick"] and not prev_keys["leftclick"] then
-				dumping = true
-				header = true
-				-- load the memory off a bit
-				-- store the previous modes for volumes and keyboard
-				if iterator == 15 then prev_iterator = 15; iterator = 1 else prev_iterator = 1 end
-				if kb.on == true then prev_kb = true kb.on = false else prev_kb = false end
-			end
-		end
-	else
-		if keys.xmouse <= 200 and keys.xmouse >= 100 and keys.ymouse >= 185 and keys.ymouse <= 210 then
-			if keys["leftclick"] and not prev_keys["leftclick"] then
-				DumpFile = io.open("Music Dump - "..filenum..".txt" , "a+")
-				DumpFile:write("||--------------||--------------||----------||----------||\n\n")
-				DumpFile:write("End frame = "..emu.framecount()                                )
-				DumpFile:close()
-				dumping = false
-				message = " Finished!       \n              \n Dump another file"
-				if kb.on == true then kb.on = false end
-				-- restore the previous modes for keyboard and volumes
-				iterator = prev_iterator; kb.on = prev_kb
-				filenum = filenum + 1
-				header = true
-			end
-		end
-	end
-	
-	if dumping == true then
-		message = " Processing... \n           \n Stop dumping "
-		if header == true then
-			DumpFile = io.open("Music Dump - "..filenum..".txt" , "w+")
-			DumpFile:write("Start frame = "..emu.framecount().."\n\n"                    )
-			DumpFile:write("||--------------||--------------||----------||----------||\n")
-			DumpFile:write("||   Square 1   ||   Square 2   || Triangle ||   Noise  ||\n")
-			DumpFile:write("||--------------||--------------||----------||----------||\n")
-			DumpFile:write("||Note |Vol |Dut||Note |Vol |Dut||Note |Vol ||Note |Vol ||\n")
-			DumpFile:write("||-----|----|---||-----|----|---||-----|----||-----|----||\n")
-			header = false
-		else
-			DumpFile = io.open("Music Dump - "..filenum..".txt" , "a+")
-			DumpFile:write(emu.framecount().."|| "..channels.Square1.semitone..channels.Square1.octave.."| "..channels.Square1.vol[1].." | "..channels.Square1.duty.." ")
-			DumpFile:write("|| "..channels.Square2.semitone..channels.Square2.octave.."| "..channels.Square2.vol[1].." | "..channels.Square2.duty.." ")
-			DumpFile:write("|| "..channels.Triangle.semitone..channels.Triangle.octave.."| "..channels.Triangle.vol[1].." ")
-			DumpFile:write("|| "..channels.Noise.semitone..channels.Noise.octave.."| "..channels.Noise.vol[1].." ||\n")
-		end
-	end
 	prev_keys = keys
 end
 emu.registerafter(Draw);
