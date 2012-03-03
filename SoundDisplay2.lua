@@ -63,10 +63,10 @@ function Draw()
 	end
 	
 	-- notes display
-	gui.text(kb.x+203, kb.y-9,  "S1: "..channels.Square1.semitone..channels.Square1.octave,   "#ff0000ff", "#000000ff")
-	gui.text(kb.x+203, kb.y,    "S2: "..channels.Square2.semitone..channels.Square2.octave,   "#aa00ccff", "#000000ff")
-	gui.text(kb.x+204, kb.y+9,  "Tr: "..channels.Triangle.semitone..channels.Triangle.octave, "#00aaffff", "#000000ff")
-	gui.text(kb.x+204, kb.y+18, "Ns: "..channels.Noise.semitone..channels.Noise.octave,       "#ffffffff", "#000000ff")
+	gui.text(kb.x+203, kb.y,  "S1: "..channels.Square1.semitone..channels.Square1.octave,   "#ff0000ff", "#000000ff")
+	gui.text(kb.x+203, kb.y+9,    "S2: "..channels.Square2.semitone..channels.Square2.octave,   "#aa00ccff", "#000000ff")
+	gui.text(kb.x+204, kb.y+18,  "Tr: "..channels.Triangle.semitone..channels.Triangle.octave, "#00aaffff", "#000000ff")
+	gui.text(kb.x+204, kb.y+27, "Ns: "..channels.Noise.semitone..channels.Noise.octave,       "#ffffffff", "#000000ff")
 
 -----------------
 -- Draw hi-hat --
@@ -78,7 +78,7 @@ function Draw()
 	yhh2 = 18
 	
 	if channels.Noise.vol[1] > 0 then 
-		if channels.Noise.octave >= 9 and channels.Noise.octave <= 13 then
+		if channels.Noise.octave >= 8 and channels.Noise.octave <= 13 then
 			colorhh = "#ffaa00"
 			if channels.Noise.vol[2] - channels.Noise.vol[1] < 4
 			and channels.Noise.vol[2] > 0
@@ -145,13 +145,13 @@ function Draw()
 			end
 		end		
 		-- draw accidental keys
-		gui.box(kb.x-3, kb.y, kb.x-5, kb.y+10, "#00000000")
+		gui.box(kb.x-3, kb.y, kb.x-5, kb.y+10, "#00000000")		
 		for oct = 0, 6 do
 			gui.box(kb.x+3+28*oct, kb.y, kb.x+5+28*oct, kb.y+10, "#00000000")
 			gui.box(kb.x+7+28*oct, kb.y, kb.x+9+28*oct, kb.y+10, "#00000000")
 			gui.box(kb.x+15+28*oct, kb.y, kb.x+17+28*oct, kb.y+10, "#00000000")
 			gui.box(kb.x+19+28*oct, kb.y, kb.x+21+28*oct, kb.y+10, "#00000000")
-			gui.box(kb.x+23+28*oct, kb.y, kb.x+25+28*oct, kb.y+10, "#00000000")
+			gui.box(kb.x+23+28*oct, kb.y, kb.x+25+28*oct, kb.y+10, "#00000000")			
 		end
 		-- draw colored boxes over accidental keys
 		for name, chan in pairs(channels) do			
@@ -169,7 +169,16 @@ function Draw()
 				end
 			end
 		end
-
+		
+		grey = "#aaaaaaaa"	
+		for oct = 0, 6 do					
+			gui.line(kb.x+3+28*oct, kb.y+10, kb.x+5+28*oct, kb.y+10, grey)
+			gui.line(kb.x+7+28*oct, kb.y+10, kb.x+9+28*oct, kb.y+10, grey)
+			gui.line(kb.x+15+28*oct, kb.y+10, kb.x+17+28*oct, kb.y+10, grey)
+			gui.line(kb.x+19+28*oct, kb.y+10, kb.x+21+28*oct, kb.y+10, grey)
+			gui.line(kb.x+23+28*oct, kb.y+10, kb.x+25+28*oct, kb.y+10, grey)
+		end
+		gui.line(kb.x-3, kb.y+10, kb.x-5, kb.y+10, grey)
 		gui.line(kb.x-8, kb.y, kb.x+200, kb.y, "#00000088")
 		gui.line(kb.x-8, kb.y+16, kb.x+200, kb.y+16, "#00000088")
 		gui.line(kb.x-8, kb.y, kb.x-8, kb.y+16, "#00000088")
@@ -212,13 +221,13 @@ function Draw()
 			
 				if #chan.float < 13 then
 					for i = 2, #chan.float do
+						if movie.framecount()%2 == 0 then gui.box(chan.float[i]-1, 161+i*5, chan.float[i]+3, 165+i*5, "#eedd2200") end
 						gui.box(chan.float[i], 162+i*5, chan.float[i]+2, 164+i*5, color)
-						if movie.framecount()%2 == 0 then gui.box(chan.float[i]-1, 161+i*5, chan.float[i]+3, 165+i*5, "#ffcc0000") end
 					end
 				else
 					for i = 2, 13 do
+						if movie.framecount()%2 == 0 then gui.box(chan.float[i]-1, 161+i*5, chan.float[i]+3, 165+i*5, "#eedd2200") end
 						gui.box(chan.float[i], 162+i*5, chan.float[i]+2, 164+i*5, color)
-						if movie.framecount()%2 == 0 then gui.box(chan.float[i]-1, 161+i*5, chan.float[i]+3, 165+i*5, "#ffcc0000") end
 					end
 					table.remove(chan.float, 14)
 				end
