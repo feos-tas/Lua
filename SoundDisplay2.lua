@@ -26,9 +26,9 @@ function Draw()
 	-- do only at the first frame
 	if #volumes.S1V == 1 then
 		channels = {
-			Square1  = {x=1,      y=9, vol=volumes.S1V, color=volumes.S1C, duty=0, midi=0, semitone=0, octave=0, prev_midi=0, float = {}},
-			Square2  = {x=1+45*1, y=9, vol=volumes.S2V, color=volumes.S2C, duty=0, midi=0, semitone=0, octave=0, prev_midi=0, float = {}},
-			Triangle = {x=1+45*2, y=9, vol=volumes.TV, midi=0, semitone=0, octave=0, prev_midi=0, float = {}},
+			Square1  = {x=1,      y=9, vol=volumes.S1V, color=volumes.S1C, duty=0, midi=0, semitone=0, octave=0, prev_semitone=0, float = {}},
+			Square2  = {x=1+45*1, y=9, vol=volumes.S2V, color=volumes.S2C, duty=0, midi=0, semitone=0, octave=0, prev_semitone=0, float = {}},
+			Triangle = {x=1+45*2, y=9, vol=volumes.TV, midi=0, semitone=0, octave=0, prev_semitone=0, float = {}},
 			Noise    = {x=1+45*3, y=9, vol=volumes.NV, midi=0, semitone=0, octave=0},
 			DPCM     = {x=1+45*4, y=9, vol=volumes.DPCMV}
 		}
@@ -198,7 +198,7 @@ function Draw()
 		for name, chan in pairs(channels) do
 			if name == "Square1" or name == "Square2" or name == "Triangle" then
 			
-				if chan.prev_midi ~= chan.midi then
+				if chan.prev_semitone ~= chan.semitone then
 					if     chan.semitone == "C"  then table.insert(chan.float, 1, kb.x+1 +28*(chan.octave-1))
 					elseif chan.semitone == "D"  then table.insert(chan.float, 1, kb.x+5 +28*(chan.octave-1))
 					elseif chan.semitone == "E"  then table.insert(chan.float, 1, kb.x+9 +28*(chan.octave-1))
@@ -303,7 +303,7 @@ function Draw()
 	
 	for name, chan in pairs(channels) do
 		if name == "Square1" or name == "Square2" or name == "Triangle" then
-			chan.prev_midi = chan.midi
+			chan.prev_semitone = chan.semitone
 		end
 	end
 	
