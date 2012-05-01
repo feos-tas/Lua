@@ -18,12 +18,15 @@ function draw()
 
 	Xspd1 = Xlev1 - LastX1
 	Xspd2 = Xlev2 - LastX2
+	
+	TimerHi = memory.readbyte(0x2e)
+	TimerLow = memory.readbyte(0x2d)	
+	RNG = memory.readbyte(0x6b)
 
 	gui.text(1, 1, "X1: "..Xlev1.."\nY1: "..Ylev1.."\nspd1: "..Xspd1)
-	gui.text(100, 1, "X2: "..Xlev2.."\nY2: "..Ylev2.."\nspd2: "..Xspd2)
+--	gui.text(100, 1, "X2: "..Xlev2.."\nY2: "..Ylev2.."\nspd2: "..Xspd2)
 	gui.text(200, 1, "HP: "..memory.readbyte(0x3d7).."\nInv: "..memory.readbyte(0x3fb))	
-	gui.text(180, 200, "Tmr: "..memory.readbyte(0x2e)..":"..memory.readbyte(0x2d).."\nRNG: "..memory.readbyte(0x6b))
-	
+	gui.text(180, 200, "Tmr: "..string.format("%X", TimerHi)..":"..string.format("%X", TimerLow).."\nRNG: "..string.format("%X", RNG))	
 
 	LastX1 = Xlev1
 	LastX2 = Xlev2
