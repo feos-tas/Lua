@@ -33,25 +33,13 @@ function InputToggles()
 	keys = input.get()
 	
 	for name, button in pairs(switches1) do
-		if keys[button.toggle] and not lastkeys[button.toggle] then
-			if button.on == false then button.on = true
-			else button.on = false
-			end
-		end		
-		if button.on == true then
-			joypad.set(1, button.val)
-		end
+		if keys[button.toggle] and not lastkeys[button.toggle] then button.on = not button.on end	
+		if button.on then joypad.set(1, button.val) end
 	end
 	
 	for name, button in pairs(switches2) do
-		if keys[button.toggle] and not lastkeys[button.toggle] then
-			if button.on == false then button.on = true
-			else button.on = false
-			end
-		end
-		if button.on == true then
-			joypad.set(2, button.val)
-		end
+		if keys[button.toggle] and not lastkeys[button.toggle] then button.on = not button.on end	
+		if button.on then joypad.set(2, button.val) end
 	end
 	
 	lastkeys = keys
