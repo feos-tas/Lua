@@ -3,10 +3,10 @@
 -- Don't forget the comma when using >1
 --	{  ID, "Attrib",Value}
 Check = {
-	{   1, "Xspd",   0xC0}
---	{0x22, "Target", 0x55}
---	{0x7E, "Cntr2",  0x7F}
---	{0x7F, "VarFlg", 0x7F}
+--	{   1, "Xspd",   0xC0},
+	{0x22, "Target", 0x55},
+	{0x7E, "Cntr2",  0x7F},
+	{0x7F, "VarFlg", 0x7F}
 }
 
 Attribs = {
@@ -59,11 +59,11 @@ function Draw()
 					gui.text(1, 8+10*i, v[2]..":")
 					CheckAddr = 0x3c1+offset*15+Slot
 					CheckVal = memory.readbyte(CheckAddr)
-					gui.text(1+Slot*15+31, 8+10*i,
-							string.format("%2X",CheckVal),"#00ff00ff")
+					gui.text(1+Slot*15+31, 8+10*i, string.format("%2X",CheckVal),"#00ff00ff")
 					if CheckVal == v[3] then
-						gui.text(100, 231, "ID:"..Slot+1 .." "..v[2].." = "..
-								string.format("%2X!",CheckVal),"white","black")
+						gui.text(70, 241-i*10, string.format(
+							"ID:%d %s: $%2X = %2X",Slot+1,v[2],CheckAddr,CheckVal
+							))
 						emu.pause()
 					end
 				end
