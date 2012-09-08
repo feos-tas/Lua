@@ -1,5 +1,5 @@
 function ToBin8(Num,Switch)
--- 1 byte to binary convertor by feos, 2012
+-- 1 byte to binary converter by feos, 2012
 -- Switch: "s" for string, "n" for number
 	Bin = ""
 	while Num > 0 do
