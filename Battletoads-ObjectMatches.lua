@@ -1,3 +1,6 @@
+-- feos, 2012
+-- NES Battletoads, object attributes checker
+
 -- Virtual breakpoints table
 -- Comment out the unused
 -- Don't forget the comma when using >1
@@ -47,6 +50,23 @@ Attribs = {
 	"EndTmr", -- 34
 }
 
+function ToBin8(Num,Switch)
+-- 1 byte to binary convertor by feos, 2012
+-- Switch: "s" for string, "n" for number
+	Bin = ""
+	while Num > 0 do
+		Bin = tostring(Num % 2)..Bin
+		Num = math.floor(Num / 2)
+	end
+	Low = string.format("%04d",(Bin % 10000))
+	High = string.format("%04d",math.floor(Bin / 10000))
+	
+	if Switch == "s" then return High.." "..Low
+	elseif Switch == "n" then return Bin
+	else return "Wrong Switch parameter!\nUse \"s\" or \"n\"."
+	end
+end
+
 function Draw()
 	for Slot = 0, 14 do
 		ID	= memory.readbyte(0x3c1+Slot)
@@ -61,8 +81,9 @@ function Draw()
 					CheckVal = memory.readbyte(CheckAddr)
 					gui.text(1+Slot*15+31, 8+10*i, string.format("%2X",CheckVal),"#00ff00ff")
 					if CheckVal == v[3] then
-						gui.text(70, 241-i*10, string.format(
-							"ID:%d %s: $%2X = %2X",Slot+1,v[2],CheckAddr,CheckVal
+						gui.text(40, 241-i*10, string.format(
+							"ID:%d %s: $%2X = %2X : %s",
+							Slot+1,v[2],CheckAddr,CheckVal,ToBin8(CheckVal,"s")
 							))
 						emu.pause()
 					end
