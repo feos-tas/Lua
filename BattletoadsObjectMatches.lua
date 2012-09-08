@@ -69,7 +69,7 @@ end
 
 function Draw()
 	for Slot = 0, 14 do
-		ID	= memory.readbyte(0x3c1+Slot)
+		ID = memory.readbyte(0x3c1+Slot)
 		gui.text(1, 1, "Slot:\nID:")
 		gui.text(1+Slot*15+31, 1,  string.format("%2d",Slot+1))
 		gui.text(1+Slot*15+31, 10, string.format("%2X",ID))		
