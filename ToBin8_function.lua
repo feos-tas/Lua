@@ -3,7 +3,7 @@ function ToBin8(Num,Switch)
 -- Switch: "s" for string, "n" for number
 	Bin = ""
 	while Num > 0 do
-		Bin = tostring(Num % 2)..Bin
+		Bin = (Num % 2)..Bin
 		Num = math.floor(Num / 2)
 	end
 	Low = string.format("%04d",(Bin % 10000))
