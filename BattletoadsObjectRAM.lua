@@ -1,10 +1,11 @@
--- TheZlomuS and feos, 2012
+-- feos and TheZlomuS, 2012
 -- Battletoads Object RAM Viewer
 
 require 'auxlib';
 
 Root = 0x3C0;	-- Objects start address
 Offs = 0xF;		-- Number of slots
+lastID,lastSlot,lasti = 0,0,0;
 
 -- Instert anything to check
 -- You can check for single bit matches applying AND masks
@@ -12,9 +13,7 @@ Highlight = {
 	{0x22, "VarFlg", 0x55, "0 0 150"},	-- Warp object
 	{0x7E, "Cntr2",  0x7F, "0 0 150"},	-- ?
 	{0x7F, "VarFlg", 0x7F, "150 0 0"}		-- Level End
-}
-
-lastID=0; lastSlot=0; lasti = 0
+};
 
 -- Whole Object RAM block
 Attribs = {
@@ -58,6 +57,7 @@ Attribs = {
 
 -- Matrix
 local mat = iup.matrix {
+	readonly = "YES",
 	numcol=Offs, numlin=#Attribs,
 	numcol_visible=Offs, numlin_visible=Offs,
 	width0="30", widthDef="10", heightDef="7"
@@ -95,7 +95,7 @@ handles[dialogs] = iup.dialog{
 handles[dialogs]:showxy(iup.CENTER, iup.CENTER);
 
 function ToBin8(Num,Switch)
--- 1 byte to binary convertor by feos, 2012
+-- 1 byte to binary converter by feos, 2012
 -- Switch: "s" for string, "n" for number
 	if Num > 0 then 
 		Bin = ""
@@ -134,12 +134,14 @@ function DrawMatrix()
 				if ID == param[1] and v == param[2] then
 					mat["bgcolor*:".. Slot] = param[4];
 					mat["bgcolor"..i..":*"] = param[4];
-					gui.text(20, 231, string.format(
-						"ID.%d: $%2X %s.$%2X: $%02X.%s",Slot,ID,v,Address,Val,ToBin8(Val,"s")
+					gui.text(1, 1, string.format(
+						"ID%d: $%2X %s: $%2X = $%02X : %s",
+						Slot,ID,v,Address,Val,ToBin8(Val,"s")
 					));
 					lastID = ID;
 					lastSlot = Slot;
 					lasti = i
+					if Val == param[3] then emu.pause() end
 				end;
 				if memory.readbyte(0x3c1+lastSlot-1) ~= lastID then
 					mat["bgcolor*:"..lastSlot] = "0 0 0";
