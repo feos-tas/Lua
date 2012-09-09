@@ -173,14 +173,14 @@ function DrawMatrix()
 			-- You can add virtual breakpoints with memory.register library
 			for _,param in ipairs(Highlight) do
 				if param[5] == "EQL" then
-					if ID == param[1] and v == param[2] and Val == param[3] then
+					if (ID == param[1] or ID == param[1] + 0x80) and v == param[2] and Val == param[3] then
 						SetHighLight(param, Slot, i, ID, v, Address, Val, true, true, false)
 					end
 				elseif param[5] == "GRT" then
-					if ID == param[1] and v == param[2] and Val > param[3] then
+					if (ID == param[1] or ID == param[1] + 0x80) and v == param[2] and Val > param[3] then
 						SetHighLight(param, Slot, i, ID, v, Address, Val, true, true, false)
 					end
-				elseif ID == param[1] then
+				elseif (ID == param[1] or ID == param[1] + 0x80) then
 					SetHighLight(param, Slot, i, ID, v, Address, Val, false, false, false)
 				end
 				if memory.readbyte(0x3c1+lastSlot-1) ~= lastID then
