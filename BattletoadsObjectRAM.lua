@@ -15,8 +15,6 @@ Highlight = {
 	{0x7F, "VarFlg", 0x7F, "150 0 0"}	-- Level End
 }
 
-Selected = {}
-
 -- Whole Object RAM block
 Attribs = {
 --  "Name", offset
@@ -101,10 +99,12 @@ handles[dialogs]:showxy(iup.CENTER, iup.CENTER)
 function mat:click_cb(lin,col,r)
 	if lin == 0 then
 		self["fgcolor*:"..self.lastCol] = "255 255 255"
+		self["fgcolor"..self.lastLin..":*"] = "255 255 255"
 		self.lastCol = col
-		self["fgcolor*:"..col] ="255 180 0"		
+		self["fgcolor*:"..col] = "255 180 0"
 	elseif col == 0 then
 		self["fgcolor"..self.lastLin..":*"] = "255 255 255"
+		self["fgcolor*:"..self.lastCol] = "255 255 255"
 		self.lastLin = lin
 		self["fgcolor"..lin..":*"] ="255 180 0"		
 	end
