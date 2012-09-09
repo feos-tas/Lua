@@ -10,18 +10,18 @@ lastID,lastSlot,lasti = 0,0,0
 -- Instert anything to check
 -- You can check for single bit matches applying AND masks
 Highlight = {
---	Obj_ID,	Attr,	Val,	Obj_Col,	Opr
-	{0x22, "Anim_2", 0x55, "0 0 150", "EQL"},	-- Respawner/Warp (Event Set)
-	{0x7E, "VarFlg",  0x7F, "0 150 0", "GRT"},	-- Dark Queen/Game End (Event Call)
-	{0x7F, "Cntr_2", 0x7F, "150 0 0", "GRT"},	-- Level End
-	{0x46, "VarFlg", 0x7F, "150 125 0", "GRT"},	-- Running Rat/Level End (Event Call)
-	{0x01, "", 0, "32 32 32", "NON"},	-- Player 1/??? (Event ???)
-	{0x02, "", 0, "64 64 64", "NON"},	-- Player 2/??? (Event ???)
-	{0x4F, "", 0, "125 75 0", "NON"},	-- Exit Hole/Level Stage End (Event Call)
-	{0x44, "", 0, "150 150 150", "NON"},	-- Destroyer/Clear Object (Event Call)
-	{0x42, "", 0, "125 125 125", "NON"},	-- Positioner/Set Coordinates (Event Call)
-	{0x41, "", 0, "150 150 0", "NON"}	-- CheackPoint/Invoke Objects (Event Call)
-	--ox4 - clear sprite
+--	ID,		Attr,	 Val,	Color,		  Opr
+	{0x22, "Anim_2", 0x55, 	"0 0 150",    "EQL"},	-- Respawner/Warp (Event Set)
+	{0x7E, "VarFlg", 0x7F, 	"0 150 0",    "GRT"},	-- Dark Queen/Game End (Event Call)
+	{0x7F, "Cntr_2", 0x7F, 	"150 0 0",    "GRT"},	-- Level End
+	{0x46, "VarFlg", 0x7F, 	"150 125 0",  "GRT"},	-- Running Rat/Level End (Event Call)
+	{0x01, "",		 0, 	"32 32 32",   "NON"},	-- Player 1/??? (Event ???)
+	{0x02, "",		 0, 	"64 64 64",   "NON"},	-- Player 2/??? (Event ???)
+	{0x4F, "",		 0, 	"125 75 0",   "NON"},	-- Exit Hole/Level Stage End (Event Call)
+	{0x44, "",		 0, 	"150 150 150","NON"},	-- Destroyer/Clear Object (Event Call)
+	{0x42, "",		 0, 	"125 125 125","NON"},	-- Positioner/Set Coordinates (Event Call)
+	{0x41, "",		 0, 	"150 150 0",  "NON"}	-- CheckPoint/Invoke Objects (Event Call)
+	--0x4 - clear sprite
 	--...
 }
 
