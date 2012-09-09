@@ -1,19 +1,21 @@
 -- feos and TheZlomuS, 2012
 -- Battletoads Object RAM Viewer
 
-require 'auxlib';
+require 'auxlib'
 
-Root = 0x3C0;	-- Objects start address
-Offs = 0xF;		-- Number of slots
-lastID,lastSlot,lasti = 0,0,0;
+Root = 0x3C0	-- Objects start address
+Offs = 0xF		-- Number of slots
+lastID,lastSlot,lasti = 0,0,0
 
 -- Instert anything to check
 -- You can check for single bit matches applying AND masks
 Highlight = {
 	{0x22, "VarFlg", 0x55, "0 0 150"},	-- Warp object
 	{0x7E, "Cntr2",  0x7F, "0 0 150"},	-- ?
-	{0x7F, "VarFlg", 0x7F, "150 0 0"}		-- Level End
-};
+	{0x7F, "VarFlg", 0x7F, "150 0 0"}	-- Level End
+}
+
+Selected = {}
 
 -- Whole Object RAM block
 Attribs = {
@@ -53,46 +55,62 @@ Attribs = {
 	"VarFlg", -- 32
 	"Unk_4",  -- 33
 	"EndTmr", -- 34
-};
+}
 
 -- Matrix
-local mat = iup.matrix {
-	readonly = "YES",
+mat = iup.matrix {
+	lastCol=0, lastLin = 0,
+	readonly="YES", hidefocus="YES",
 	numcol=Offs, numlin=#Attribs,
 	numcol_visible=Offs, numlin_visible=Offs,
 	width0="30", widthDef="10", heightDef="7"
-};
+}
 
 -- Headers BG color
 for c=0,#Attribs do
 	for l=0,Offs do
-		mat["bgcolor".. 0 ..":".. l] = "80 0 0";
-		mat["bgcolor".. c ..":".. 0] = "80 0 0";
-	end;
-end;
+		mat["bgcolor".. 0 ..":".. l] = "80 0 0"
+		mat["bgcolor".. c ..":".. 0] = "80 0 0"
+	end
+end
 
 -- Line headers
 for i,v in pairs(Attribs) do
-	mat:setcell(i,0,v);
+	mat:setcell(i,0,v)
 end;
 
 -- Column headers
 for i=1, Offs do
-	mat:setcell(0,i,i);
+	mat:setcell(0,i,i)
 end;
 
 -- Table colors
-mat.bgcolor = "0 0 0";
-mat.fgcolor = "255 255 255";
+mat.bgcolor = "0 0 0"
+mat.fgcolor = "255 255 255"
 
 -- Dialog name and pos
-dialogs = dialogs + 1;
+dialogs = dialogs + 1
 handles[dialogs] = iup.dialog{
 	iup.vbox{mat,iup.fill{}},
 	title="Battletoads - Object Attribute Viewer",
 	size="295x443"
-};
-handles[dialogs]:showxy(iup.CENTER, iup.CENTER);
+}
+handles[dialogs]:showxy(iup.CENTER, iup.CENTER)
+
+-- Select line/column
+function mat:click_cb(lin,col,r)
+	if lin == 0 then
+		self["fgcolor*:"..self.lastCol] = "255 255 255"
+		self.lastCol = col
+		self["fgcolor*:"..col] ="255 180 0"		
+	elseif col == 0 then
+		self["fgcolor"..self.lastLin..":*"] = "255 255 255"
+		self.lastLin = lin
+		self["fgcolor"..lin..":*"] ="255 180 0"		
+	end
+	mat.redraw = "ALL"
+	return IUP_DEFAULT
+end
 
 function ToBin8(Num,Switch)
 -- 1 byte to binary converter by feos, 2012
@@ -122,37 +140,36 @@ end
 function DrawMatrix()
 	for Slot = 1, Offs do
 		ID = memory.readbyte(0x3c1+Slot-1)
-		gui.text(300,300,"")
 		for i,v in ipairs(Attribs) do			
-			Address = (Root+(i-1)*Offs+Slot);
-			Val = memory.readbyte(Address);
-			mat:setcell(i,Slot,string.format("%02X",Val));
+			Address = (Root+(i-1)*Offs+Slot)
+			Val = memory.readbyte(Address)
+			mat:setcell(i,Slot,string.format("%02X",Val))
 			
 			-- Highlight the cell and print debug info on matches
 			-- You can add virtual breakpoints with memory.register library
 			for _,param in ipairs(Highlight) do
 				if ID == param[1] and v == param[2] then
-					mat["bgcolor*:".. Slot] = param[4];
-					mat["bgcolor"..i..":*"] = param[4];
+					mat["bgcolor*:"..Slot] = param[4]
+					mat["bgcolor"..i..":*"] = param[4]
 					gui.text(1, 1, string.format(
 						"ID%d: $%2X %s: $%2X = $%02X : %s",
 						Slot,ID,v,Address,Val,ToBin8(Val,"s")
-					));
-					lastID = ID;
-					lastSlot = Slot;
+					))
+					lastID = ID
+					lastSlot = Slot
 					lasti = i
 					if Val == param[3] then emu.pause() end
-				end;
-				if memory.readbyte(0x3c1+lastSlot-1) ~= lastID then
-					mat["bgcolor*:"..lastSlot] = "0 0 0";
-					mat["bgcolor"..lasti..":*"] = "0 0 0";
-					lastID = 0;
 				end
-			end;
-		end;
-	end;	
+				if memory.readbyte(0x3c1+lastSlot-1) ~= lastID then
+					mat["bgcolor*:"..lastSlot] = "0 0 0"
+					mat["bgcolor"..lasti..":*"] = "0 0 0"
+					lastID = 0
+				end
+			end
+		end
+	end
 
-	mat.redraw = "C1:15";
-end;
+	mat.redraw = "ALL"
+end
 
-emu.registerafter(DrawMatrix);
+emu.registerafter(DrawMatrix)
