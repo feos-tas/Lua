@@ -97,17 +97,24 @@ handles[dialogs]:showxy(iup.CENTER, iup.CENTER);
 function ToBin8(Num,Switch)
 -- 1 byte to binary convertor by feos, 2012
 -- Switch: "s" for string, "n" for number
-	Bin = ""
-	while Num > 0 do
-		Bin = (Num % 2)..Bin
-		Num = math.floor(Num / 2)
-	end
-	Low = string.format("%04d",(Bin % 10000))
-	High = string.format("%04d",math.floor(Bin / 10000))
-	
-	if Switch == "s" then return High.." "..Low
-	elseif Switch == "n" then return Bin
-	else return "Wrong Switch parameter!\nUse \"s\" or \"n\"."
+	if Num > 0 then 
+		Bin = ""
+		while Num > 0 do
+			Bin = (Num % 2)..Bin
+			Num = math.floor(Num / 2)
+		end
+		Low = string.format("%04d",(Bin % 10000))
+		High = string.format("%04d",math.floor(Bin / 10000))
+		
+		if Switch == "s" then return High.." "..Low
+		elseif Switch == "n" then return Bin
+		else return "Wrong Switch parameter!\nUse \"s\" or \"n\"."
+		end
+	else
+		if Switch == "s" then return "0000 0000"
+		elseif Switch == "n" then return 0
+		else return "Wrong Switch parameter!\nUse \"s\" or \"n\"."
+		end
 	end
 end
 
@@ -127,8 +134,8 @@ function DrawMatrix()
 				if ID == param[1] and v == param[2] then
 					mat["bgcolor*:".. Slot] = param[4];
 					mat["bgcolor"..i..":*"] = param[4];
-					gui.text(50, 231, string.format(
-						"ID(%d): $%2X %s: $%2X = $%02X",Slot,ID,v,Address,Val
+					gui.text(20, 231, string.format(
+						"ID.%d: $%2X %s.$%2X: $%02X.%s",Slot,ID,v,Address,Val,ToBin8(Val,"s")
 					));
 					lastID = ID;
 					lastSlot = Slot;
