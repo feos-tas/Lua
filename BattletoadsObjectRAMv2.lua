@@ -118,7 +118,7 @@ function mat:click_cb(lin,col,r)
 		self.lastLin = lin
 		self["fgcolor"..lin..":*"] ="255 180 0"		
 	end
-	mat.redraw = "C1:15" --4Wht ALL? :D, "First Redraw" make color for labels, we don't need update labels per frame :O
+	mat.redraw = "C1:15"
 	return IUP_DEFAULT
 end
 
@@ -147,17 +147,17 @@ function ToBin8(Num,Switch)
 end
 
 -- Set Highlight to Matrix
-function SetHighLight(param, Slot, i, ID, v, Address, Val, EnableA, EnableT, EnableP)
+function SetHighLight(param, Slot, i, ID, v, Address, Val, DoColor, DoText, DoPause)
 	mat["bgcolor*:"..Slot] = param[4]
-	if EnableA then mat["bgcolor"..i..":*"] = param[4] end
-	if EnableT then gui.text(1, 1, string.format(
+	if DoColor then mat["bgcolor"..i..":*"] = param[4] end
+	if DoText then gui.text(1, 1, string.format(
 		"ID%d: $%2X %s: $%2X = $%02X : %s",
 		Slot,ID,v,Address,Val,ToBin8(Val,"s")
 	)) end
 	lastID = ID
 	lastSlot = Slot
 	lasti = i
-	if EnableP and (Val == param[3]) then emu.pause() end	-- We need do it in other way!
+	if DoPause and (Val == param[3]) then emu.pause() end	-- We need do it in other way!
 end
 
 -- Values calculation
@@ -169,24 +169,27 @@ function DrawMatrix()
 			Val = memory.readbyte(Address)
 			mat:setcell(i,Slot,string.format("%02X",Val))
 			
-			-- Highlight the cell and print debug info on matches
-			-- You can add virtual breakpoints with memory.register library
 			for _,param in ipairs(Highlight) do
 				if param[5] == "EQL" then
-					if (ID == param[1] or ID == param[1] + 0x80) and v == param[2] and Val == param[3] then
-						SetHighLight(param, Slot, i, ID, v, Address, Val, true, true, false)
+					if (ID == param[1] or ID == param[1] + 0x80)
+					and v == param[2] and Val == param[3] then SetHighLight(
+						param, Slot, i, ID, v, Address, Val, true, true, false
+					)
 					end
 				elseif param[5] == "GRT" then
-					if (ID == param[1] or ID == param[1] + 0x80) and v == param[2] and Val > param[3] then
-						SetHighLight(param, Slot, i, ID, v, Address, Val, true, true, false)
+					if (ID == param[1] or ID == param[1] + 0x80)
+					and v == param[2] and Val > param[3] then SetHighLight(
+						param, Slot, i, ID, v, Address, Val, true, true, false
+					)
 					end
-				elseif (ID == param[1] or ID == param[1] + 0x80) then
-					SetHighLight(param, Slot, i, ID, v, Address, Val, false, false, false)
+				elseif (ID == param[1] or ID == param[1] + 0x80) then SetHighLight(
+					param, Slot, i, ID, v, Address, Val, false, false, false
+				)
 				end
 				if memory.readbyte(0x3c1+lastSlot-1) ~= lastID then
 					mat["bgcolor*:"..lastSlot] = "0 0 0"
 					mat["bgcolor"..lasti..":*"] = "0 0 0"
-					gui.text(1,1, "");
+					gui.text(1,1, "")
 					lastID = 0
 				end
 			end
