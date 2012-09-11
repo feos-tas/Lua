@@ -6,6 +6,9 @@ require 'auxlib'
 Root = 0x3C0	-- Objects start address
 Offs = 0xF		-- Number of slots
 lastID,lastSlot,lasti = 0,0,0
+Show = false
+last_draw = false
+last_keys = input.get()
 
 -- Instert anything to check
 -- You can check for single bit matches applying AND masks
@@ -62,64 +65,65 @@ Attribs = {
 	"Target", -- 31
 	"VarFlg", -- 32
 	"Unk_4",  -- 33
-	"EndTmr", -- 34
+	"EndTmr" -- 34
 }
 
--- Matrix
-mat = iup.matrix {
-	lastCol=0, lastLin = 0,
-	readonly="YES", hidefocus="YES",
-	numcol=Offs, numlin=#Attribs,
-	numcol_visible=Offs, numlin_visible=Offs,
-	width0="30", widthDef="10", heightDef="7"
-}
+function DrawMatrix()
+	-- Matrix
+	mat = iup.matrix {
+		lastCol=0, lastLin = 0,
+		readonly="YES", hidefocus="YES",
+		numcol=Offs, numlin=#Attribs,
+		numcol_visible=Offs, numlin_visible=Offs,
+		width0="30", widthDef="10", heightDef="7"
+	};
 
--- Headers BG color
-for c=0,#Attribs do
-	for l=0,Offs do
-		mat["bgcolor".. 0 ..":".. l] = "80 0 0"
-		mat["bgcolor".. c ..":".. 0] = "80 0 0"
+	-- Headers BG color
+	for c=0,#Attribs do
+		for l=0,Offs do
+			mat["bgcolor".. 0 ..":".. l] = "80 0 0"
+			mat["bgcolor".. c ..":".. 0] = "80 0 0"
+		end
 	end
-end
 
--- Line headers
-for i,v in pairs(Attribs) do
-	mat:setcell(i,0,v)
-end;
+	-- Line headers
+	for i,v in pairs(Attribs) do
+		mat:setcell(i,0,v)
+	end;
 
--- Column headers
-for i=1, Offs do
-	mat:setcell(0,i,i)
-end;
+	-- Column headers
+	for i=1, Offs do
+		mat:setcell(0,i,i)
+	end;
 
--- Table colors
-mat.bgcolor = "0 0 0"
-mat.fgcolor = "255 255 255"
+	-- Table colors
+	mat.bgcolor = "0 0 0"
+	mat.fgcolor = "255 255 255"
 
--- Dialog name and pos
-dialogs = dialogs + 1
-handles[dialogs] = iup.dialog{
-	iup.vbox{mat,iup.fill{}},
-	title="Battletoads - Object Attribute Viewer",
-	size="295x443"
-}
-handles[dialogs]:showxy(iup.CENTER, iup.CENTER)
+	-- Dialog name and pos
+	dialogs = 1
+	handles[dialogs] = iup.dialog{
+		iup.vbox{mat,iup.fill{}},
+		title="Battletoads - Object Attribute Viewer",
+		size="295x443"
+	};
+	handles[dialogs]:showxy(iup.CENTER, iup.CENTER)
 
--- Select line/column
-function mat:click_cb(lin,col,r)
-	if lin == 0 then
-		self["fgcolor*:"..self.lastCol] = "255 255 255"
-		self["fgcolor"..self.lastLin..":*"] = "255 255 255"
-		self.lastCol = col
-		self["fgcolor*:"..col] = "255 180 0"
-	elseif col == 0 then
-		self["fgcolor"..self.lastLin..":*"] = "255 255 255"
-		self["fgcolor*:"..self.lastCol] = "255 255 255"
-		self.lastLin = lin
-		self["fgcolor"..lin..":*"] ="255 180 0"		
+	function mat:click_cb(lin,col,r)
+		if lin == 0 then
+			self["fgcolor*:"..self.lastCol] = "255 255 255"
+			self["fgcolor"..self.lastLin..":*"] = "255 255 255"
+			self.lastCol = col
+			self["fgcolor*:"..col] = "255 180 0"
+		elseif col == 0 then
+			self["fgcolor"..self.lastLin..":*"] = "255 255 255"
+			self["fgcolor*:"..self.lastCol] = "255 255 255"
+			self.lastLin = lin
+			self["fgcolor"..lin..":*"] ="255 180 0"		
+		end
+		mat.redraw = "C1:15"
+		return IUP_DEFAULT
 	end
-	mat.redraw = "C1:15"
-	return IUP_DEFAULT
 end
 
 function ToBin8(Num,Switch)
@@ -148,8 +152,10 @@ end
 
 -- Set Highlight to Matrix
 function SetHighLight(param, Slot, i, ID, v, Address, Val, DoColor, DoText, DoPause)
-	mat["bgcolor*:"..Slot] = param[4]
-	if DoColor then mat["bgcolor"..i..":*"] = param[4] end
+	if Show then
+		mat["bgcolor*:"..Slot] = param[4]
+		if DoColor then mat["bgcolor"..i..":*"] = param[4] end
+	end
 	if DoText then gui.text(1, 1, string.format(
 		"ID%d: $%2X %s: $%2X = $%02X : %s",
 		Slot,ID,v,Address,Val,ToBin8(Val,"s")
@@ -161,13 +167,30 @@ function SetHighLight(param, Slot, i, ID, v, Address, Val, DoColor, DoText, DoPa
 end
 
 -- Values calculation
-function DrawMatrix()
+function DoAll()
+	keys = input.get()
+	if keys.xmouse >= 225 and keys.xmouse <= 252
+	and keys.ymouse >= 205 and keys.ymouse <= 230 then
+		if keys["middleclick"] and not last_keys["middleclick"] then
+			Show = not Show
+			if last_draw then handles[1]:destroy() end
+		end
+	end
+	
+	if Show and not last_draw then DrawMatrix() end
+	
+	if Show then Btext = "Hide\nRAM"; Bcolor = "#00ff0088"
+	else Btext = "See\nRAM"; Bcolor = "#0000ff88"	
+	end
+	gui.box(225,205,252,230,Bcolor)
+	gui.text(230,210,Btext,"white","black")
+	
 	for Slot = 1, Offs do
 		ID = memory.readbyte(0x3c1+Slot-1)
 		for i,v in ipairs(Attribs) do			
 			Address = (Root+(i-1)*Offs+Slot)
 			Val = memory.readbyte(Address)
-			mat:setcell(i,Slot,string.format("%02X",Val))
+			if Show then mat:setcell(i,Slot,string.format("%02X",Val)) end
 			
 			for _,param in ipairs(Highlight) do
 				if param[5] == "EQL" then
@@ -187,18 +210,20 @@ function DrawMatrix()
 				)
 				end
 				if memory.readbyte(0x3c1+lastSlot-1) ~= lastID then
-					mat["bgcolor*:"..lastSlot] = "0 0 0"
-					mat["bgcolor"..lasti..":*"] = "0 0 0"
-					gui.text(1,1, "")
+					if Show then 
+						mat["bgcolor*:"..lastSlot] = "0 0 0"
+						mat["bgcolor"..lasti..":*"] = "0 0 0"
+					end
+					gui.text(0,0, "")
 					lastID = 0
 				end
 			end
 		end
 	end
-
-	mat.redraw = "C1:15" --For what all? :) Nice optimize ^^!
-	
-	-- The success has been for graphically! :D
+	if Show then mat.redraw = "C1:15"; last_draw = true
+	else last_draw = false
+	end
+	last_keys = keys
 end
 
-emu.registerafter(DrawMatrix)
+emu.registerafter(DoAll)
