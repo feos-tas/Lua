@@ -1,30 +1,30 @@
-last_timer = 0
-last_framecount = 0
-markerIndex = 0
+no_lag = false
 function draw()
-	Xspd = memory.readbytesigned(0x3a)
-	Yspd = memory.readbytesigned(0x3b)
-	timer= memory.readbyte(0x322)
+	Xspd = memory.readbytesigned(0x53b)
+	Yspd = memory.readbytesigned(0x53c)
 	X    = memory.readbyte(0x58f)
 	Y    = memory.readbyte(0x59b)
-	camX = memory.readbyte(0x31c)
-	camY = memory.readbyte(0x31b)
-	frameCount = movie.framecount()
-	
-	if (frameCount - last_framecount) == 1 and (timer - last_timer) == 0 then
-		gui.text(100,100,"\n LAG!!! ","#ff0000ff")
-		if (taseditor.engaged()) then
-			markerIndex = taseditor.setmarker(frameCount-1)
-			taseditor.setnote(markerIndex, "LAG "..markerIndex)
-		end
-	elseif (taseditor.engaged()) and (taseditor.markedframe(frameCount-1)) then
-		taseditor.removemarker(frameCount-1)
-	end
-	
+	camX = memory.readbyte(0x31f) + memory.readbyte(0x320)*0x100
+	camY = memory.readbyte(0x31b)	
 	gui.text(1,1,"X: "..X+camX.."\nY: "..Y+camY)
 	gui.text(50,1,"Xspd: "..Xspd.."\nYspd: "..Yspd)
-	gui.text(100,1,"Tmr: "..timer.."\nLag: ".. markerIndex)
-	last_timer = timer
-	last_framecount = frameCount
 end
+
+function set_nolag()
+  no_lag = true;
+  draw()
+end
+memory.registerexecute(0xC6E9, set_nolag);  -- 07:C6E9 INC $0322
+
+function determine_lagflag()
+  if (no_lag) then
+    emu.setlagflag(false);
+    no_lag = false;     -- no_lag only affects once
+  else
+    emu.setlagflag(true);
+  end
+  draw()
+end
+memory.registerexecute(0xDE58, determine_lagflag);  -- 07:DE58 End of the cycle of reading from $4016-4017 (the point where FCEUX sets lagFlag to 0)
+
 emu.registerafter(draw);
