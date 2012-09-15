@@ -7,7 +7,6 @@ function draw()
 	camX = memory.readbyte(0x31f) + memory.readbyte(0x320)*0x100
 	camY = memory.readbyte(0x31b)	
 	gui.text(1,1,"X: "..X+camX.."\nY: "..Y+camY)
-	gui.text(50,1,"Xspd: "..Xspd.."\nYspd: "..Yspd)
 end
 
 function set_nolag()
@@ -23,7 +22,6 @@ function determine_lagflag()
   else
     emu.setlagflag(true);
   end
-  draw()
 end
 memory.registerexecute(0xDE58, determine_lagflag);  -- 07:DE58 End of the cycle of reading from $4016-4017 (the point where FCEUX sets lagFlag to 0)
 
