@@ -5,8 +5,10 @@ function draw()
 	X    = memory.readbyte(0x58f)
 	Y    = memory.readbyte(0x59b)
 	camX = memory.readbyte(0x31f) + memory.readbyte(0x320)*0x100
-	camY = memory.readbyte(0x31b)	
+	camY = memory.readbyte(0x31b)
+	InvTmr=memory.readbyte(0x4b2)
 	gui.text(1,1,"X: "..X+camX.."\nY: "..Y+camY)
+	gui.text(50,1,"InvTmr:\n"..InvTmr)
 end
 
 function set_nolag()
