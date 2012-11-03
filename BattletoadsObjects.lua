@@ -37,7 +37,7 @@ function info()
 			gui.text(x, y, string.format("%2X",id))			
 		end		
 		if x<0 then x=0 elseif x>242 then x=242 end	
-		gui.text(1+i*16+18, 1, string.format("%2d\n%2X\n\n\n%2X",i+1,id,dthTmr))
+		gui.text(1+i*16+18, 1, string.format("%2d\n%2X",i+1,id))
 --		gui.text(xSH,ySH,"Sh")
 	end
 	
