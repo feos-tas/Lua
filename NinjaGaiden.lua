@@ -1,7 +1,8 @@
-lastxposAbsolute = 0
+lastxposAbs = 0
 local function NGRAMview()
-	for i = 4, 7 do
+	for i = 0, 7 do
 		id		= memory.readbyte(0x400+i)
+		time	= memory.readbyte(0x408+i)
 		some	= memory.readbyte(0x420+i)
 		mov		= memory.readbyte(0x438+i)
 		xsub	= memory.readbyte(0x458+i)
@@ -10,39 +11,39 @@ local function NGRAMview()
 		y		= memory.readbyte(0x480+i)
 		yspeed	= memory.readbytesigned(0x470+i)
 		ysubspd = memory.readbyte(0x468+i)
---[[		gui.text(x, y-20, i) -- .."\n"..yspeed.."."..ysubspd)
-		gui.text(1, 1, "slot:\nid:\nx:\ny:")
-		gui.text(i*60-205, 224, string.format(
-			"%d: %02X.%02X",i,x,xsub
-		))]]
+		if time > 0 then color="#00ddffff" else color="#ffffffff" end		
+		gui.text(x, y-20, string.format("%X",i),color,"#000000ff")
+		gui.text(i*32+3, 1, string.format("%d:%3d",i,time),color,"#000000ff")		
+		gui.text(i*32+3, 9, string.format(
+			"%02X.%02X\n%02X.%02X",x,xsub,y,ysub
+		),"#ffccaaff","#000000ff")	
 	end
 
-	xpos = memory.readbyte(0x86) + (memory.readbyte(0x85)/256)
-	ypos = memory.readbyte(0x8A)
-	yspd = memory.readbytesigned(0x89) + (memory.readbyte(0x87)/256)
-	scrnpos = memory.readbyte(0xA3); scrnsub = memory.readbyte(0xA2)
-	xposAbsolute = scrnpos+xpos+(scrnsub/256)+(memory.readbytesigned(0x52)*256)
-	xspd = xposAbsolute - lastxposAbsolute
-	timerf = memory.readbyte(0x62); timer = memory.readbyte(0x63)
-	rnga = memory.readbyte(0xB5); rngb = memory.readbyte(0xBF)
-	ninpo = memory.readbyte(0x64)
-	bosshp = memory.readbyte(0x497); abosshp = memory.readbyte(0x496)
-	inv = memory.readbyte(0x95)
-	gui.text(xpos,ypos-20,string.format("%3.1f",xspd))
-	gui.text(25,9,string.format("Yspd: %6.3f",yspd))	
-	gui.text(25,17,string.format("Position: %5.1f, %3d",xposAbsolute,ypos))
-	gui.text(129,17,string.format("[%05.1f+%02X,%02X]",xpos,scrnpos,scrnsub))
-	gui.text(73,33,string.format("%3d:%02d",timer,timerf))
+	xpos	= memory.readbyte(0x86) + (memory.readbyte(0x85)/256)
+	ypos	= memory.readbyte(0x8A)
+	scrnpos	= memory.readbyte(0xA3)
+	scrnsub = memory.readbyte(0xA2)
+	xposAbs	= scrnpos+xpos+(scrnsub/256)+(memory.readbytesigned(0x52)*256)
+	xspd	= xposAbs - lastxposAbs
+	rnga	= memory.readbyte(0xB5)
+	rngb	= memory.readbyte(0xBF)
+	bosshp	= memory.readbyte(0x497)
+	abosshp = memory.readbyte(0x496)
+	inv		= memory.readbyte(0x95)
+	shifted = bit.rshift(rngb,1)
+	
+	gui.box(0,25,95,40,"#000000ff")
+	gui.text(xpos,ypos-10,string.format("%2.1f",xspd))	
+	gui.text(3,25,string.format("X: %.1f\nY: %03d",xposAbs,ypos),"#44ffffff","#000000ff")
+	gui.text(67,25,string.format("BF: %3d.%3d\nB5: %d",rngb,shifted,rnga),"#44ffffff","#000000ff")
+	lastxposAbs = xposAbs
+	
+	if inv > 0 then gui.text(241,33,string.format("%02d",inv)) end
 	if bosshp > 0 then
 		if bosshp > 16
 			then gui.text(177,41,string.format("%02d",abosshp))
 			else gui.text(177,41,string.format("%02d",bosshp))
 		end
 	end
-	if inv > 0 then gui.text(241,33,string.format("%02d",inv)) end
-	gui.text(208,17,string.format("B5:%3d ",rnga))
-	gui.text(208,25,string.format("BF:%3d ",rngb))
-	gui.text(81,41,string.format("[%02d]",ninpo))
-	lastxposAbsolute = xposAbsolute
 end
 emu.registerafter(NGRAMview);
