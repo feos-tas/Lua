@@ -12,13 +12,8 @@ function Stuff()
 	Ypos = memory.readbyte(0x99) + (memory.readbyte(0x9A)*0x100) + (memory.readbyte(0x98)/400)
 	Xcam = memory.readbyte(0x17) + memory.readbyte(0x18)*0x100
 	Ycam = memory.readbyte(0x1A) + memory.readbyte(0x1B)*0x100
-	Xenemy1 = memory.readbyte(0x6)
-	Yenemy1 = memory.readbyte(0x8)
-	Xenemy2 = memory.readbyte(0xA)
-	Yenemy2 = memory.readbyte(0xC)
 	timer = memory.readbyte(0x8F)
 	RNG = memory.readbyte(0x90)
-	pattern = AND(RNG, 3)
 	bossHP = memory.readbyte(0xB9)
 	bossInv = memory.readbyte(0xB8)
 	
@@ -29,8 +24,7 @@ function Stuff()
 	
 	gui.text( 0, 8, string.format("X: %.2f\nY: %.2f",Xpos,Ypos))
 	gui.text(170, 8, string.format("Xcam: %4d\nYcam: %4d",Xcam,Ycam))
-	gui.text(115, 8, string.format("Tmr: %d\nRNG: %X:%d\nHP: %d\nInv: %d",timer,RNG,pattern,bossHP,bossInv))
-	gui.text(Xpos-Xcam, Ypos-Ycam, string.format("%.2f\n%.2f",Xspd,Yspd), "#00ff00ff")
+	gui.text(115, 8, string.format("Tmr: %d\nRNG: %X\nHP: %d\nInv: %d",timer,RNG,bossHP,bossInv))
 	
 	lastXpos = Xpos
 	lastYpos = Ypos
@@ -51,6 +45,8 @@ function Stuff()
 			gui.text(x, y, string.format("%X\n%X",id,state))
 		end
 	end
+	
+	gui.text(Xpos-Xcam, Ypos-Ycam, string.format("%.2f\n%.2f",Xspd,Yspd), "#00ff00ff")
 end
 
 function DetectLag()
