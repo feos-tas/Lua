@@ -69,7 +69,56 @@ function HandleMsgTable(clear)
 			local opacity = AND((MsgTable[i].timer_ - gens.framecount() + 2)*7, 0xFF)
 			gui.line(i * MsgOffs + 3, MsgY2, MsgTable[i].x_ - xcam, MsgTable[i].y_, 0xFF000000+opacity)
 			gui.text(i * MsgOffs    , MsgY1, MsgTable[i].damage_, "red")
-			if (MsgTable[i].timer_ <gens>=  num1) and (var <= num2)
+			if (MsgTable[i].timer_ < gens.framecount()) then
+				MsgTable[i] = nil
+			end
+		end
+	end
+end
+
+function HandleDamage()
+	local damage = AND(getr("d0"),   0xFFFF)
+	local base   = AND(getr("a2"), 0xFFFFFF)	
+	EnemyPos(base)
+	unit = {
+		timer_ = gens.framecount() + MsgTime,
+		damage_ = damage,
+		x_ = x1 + xcam,
+		y_ = y1
+	}
+	for i = 1, 200 do
+		if MsgTable[i] == nil then
+			MsgTable[i] = unit
+			break
+		end
+	end
+end
+
+function Collision()
+	GetCam()
+	local a0 = AND(getr("a0"), 0xFFFFFF)
+	local a6 = AND(getr("a6"), 0xFFFFFF)
+	local damage = rw(a6 + 0x12)
+	local id  = rw(a6 + 2)
+	local wx2 = getr("d6") - xcam
+	local wy2 = getr("d7") - ycam
+	local wx1 = getr("d4") - xcam
+	local wy1 = getr("d5") - ycam
+--	gui.text(wx2 + 2, wy1 + 1, string.format("%X",a6))
+	if (damage == 0) then
+		damage = rw(a0 + 0x34)
+	end
+	if (DamageHitbox) then
+		gui.box(wx1, wy1, wx2, wy2, "#FF000000")
+		gui.text(wx1 + 2, wy1 + 1, damage)
+	else
+		gui.box(wx1, wy1, wx2, wy2, "#FFFF0000")
+		if id == 0x53B4 then Hearts = Hearts + 1 end
+	end
+end
+
+function InRange(var, num1, num2)
+	if (var >=  num1) and (var <= num2)
 	then return true
 	end
 end
@@ -104,11 +153,14 @@ function Hitbox(address)
 		elseif (address == 0xFFDEBA) then
 			gui.box(x1, y1, x2, y2, "#00FFFF00")
 			gui.text(x1 + 2, y1 + 1, hp, "#FF00FF")
-		--	if (x2 <0>= 320) then gui.text(x1 + 2, y2 - 7, "x:" .. x1 - 320) end
+		--	if (x2 <    0) then gui.text(x1 + 2, y2 - 7, "x:" .. x1      ) end
+		--	if (x1 >= 320) then gui.text(x1 + 2, y2 - 7, "x:" .. x1 - 320) end
 		--	if (y2 <    0) then gui.text(x2 + 2, y2 - 7, "y:" .. y2      ) end
 			local offtext = ""
-			if (x2 <0>= 320) then offtext = offtext .. "x:" .. x1 - 320 end
-			if (y2 <0>= 224) then offtext = offtext .. "y:" .. y2 - 224 end
+			if (x2 <    0) then offtext = offtext .. "x:" .. x1       end
+			if (x1 >= 320) then offtext = offtext .. "x:" .. x1 - 320 end
+			if (y2 <    0) then offtext = offtext .. "y:" .. y2       end
+			if (y2 >= 224) then offtext = offtext .. "y:" .. y2 - 224 end
 			if offtext ~= "" then
 				gui.text(x1 + 2, y2 - 7, offtext)
 			end
@@ -201,7 +253,8 @@ function Main()
 	local Charge2 = (rw(0xFFF698) - 0x2800) / -0x80
 	local ScreenLock = rw(0xFFDFC0)
 	if Charge1 <= 0 then Charge1 = 0; color1 = "red" end
-	if Charge2 <0> 1 then              color0 = "red" end
+	if Charge2 <= 0 then Charge2 = 0; color2 = "red" end
+	if RNGcount > 1 then              color0 = "red" end
 	HandleMsgTable()
 	PlayerPos()
 	Objects()
