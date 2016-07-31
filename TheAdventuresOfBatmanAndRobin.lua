@@ -100,10 +100,10 @@ function Collision()
 	local a6 = AND(getr("a6"), 0xFFFFFF)
 	local damage = rw(a6 + 0x12)
 	local id  = rw(a6 + 2)
-	local wx2 = getr("d6") - xcam
-	local wy2 = getr("d7") - ycam
 	local wx1 = getr("d4") - xcam
 	local wy1 = getr("d5") - ycam
+	local wx2 = getr("d6") - xcam
+	local wy2 = getr("d7") - ycam
 --	gui.text(wx2 + 2, wy1 + 1, string.format("%X",a6))
 	if (damage == 0) then
 		damage = rw(a0 + 0x34)
@@ -178,8 +178,10 @@ function Objects()
 	GetCam()
 	local base = 0xFFAD54
 	for i=0,100 do
+		local a5   = rl (base)
 		local link = rw (base+   6)
 		local ptr1 = rw (base+0x0A)+0xFF0000
+		local lol  = rb (base+0x19)
 		local x    = rws(base+0x3E)
 		local xsub = rb (base+0x40)
 		local y    = rws(base+0x42)
@@ -198,17 +200,27 @@ function Objects()
 			or ptr2 == 0x28E08 -- helicopter red phase 2
 			then
 				Enemies = Enemies + 1
+				gui.text(x - xcam, y - ycam-3, string.format("%X", lol), "green")
 			elseif ptr2 == 0x13326
 			or     ptr2 == 0x13BDE
 			then
 				Items = Items + 1
+			--	gui.text(x - xcam, y - ycam, string.format("%X", base), "green")
 			else
-			--	gui.text(x - xcam, y - ycam, string.format("%X", ptr2), "green")
+			--	gui.text(x - xcam, y - ycam, string.format("%X", ptr2), "green")	
 			end
 		end
+		if a5 == 0x7D2 then
+		--	gui.text(x - xcam, y - ycam, string.format("%X", base), "green")		
+		end
 		base = link + 0xFF0000
-		local a5   = rl (base)
+		a5 = rl(base)
 		if a5 == 0x88BE then return end
+		if a5 == 0x53B4 then
+			local x = rw(base+0x2E)
+			local y = rw(base+0x32)
+		--	gui.text(x, y-ycam, string.format("%X", base), "green")			
+		end
 	end
 end
 
@@ -227,6 +239,47 @@ function Spawns()
 		SpawnOpac  = 192
 		SpawnCount = SpawnCount + 1
 	end
+end
+
+function PredictItem(rng)
+	rng = AND(rng, 0xFFFF)
+	local a2 = 0x29B78
+	local d0 = 0
+	local carry = rw(a2) > rng
+	a2 = a2 + 2
+	if carry then
+		a2 = a2 + 2
+		while rw(a2) > rng do
+			a2 = a2 + 4
+		end
+		a2 = a2 + 2
+	end
+	a2 = a2 + rw(a2) + 2
+	if a2 == 0x29BBA then a2 = 0 end
+	return AND(rw(a2), 0xFF)
+end
+
+function RNGroll(seed1, seed2)                                  -- subroutine $995C
+	local d0 = seed1                                           
+	local d1 = seed2                                           
+	d1 = SHIFT(    d1,           -1) + SHIFT(d1,            31) -- ROL.L   #1,D1
+	d1 = XOR  (AND(d1, 0xFFFF),  d0) + AND  (d1,    0xFFFF0000) -- EOR.W   D0,D1
+	d1 = SHIFT(AND(d1, 0xFFFF), -16) + SHIFT(d1,            16) -- SWAP.W  D1
+	d0 = AND  (XOR(d1, d0),  0xFFFF)                            -- EOR.W   D1,D0
+	d0 = AND(SHIFT(d0, -1),  0xFFFF) + SHIFT(SHIFT(d0, -1), 16) -- ROL.W   #1,D0
+	d1 = XOR  (AND(d1, 0xFFFF),  d0) + AND  (d1,    0xFFFF0000) -- EOR.W   D0,D1
+	d1 = SHIFT(AND(d1, 0xFFFF), -16) + SHIFT(d1,            16) -- SWAP.W  D1
+	d0 = XOR  (AND(d1, 0xFFFF),  d0)                            -- EOR.W   D1,D0
+	return    {AND(d0, 0xFFFF),  d1}
+end
+
+function ItemPrediction()
+	local RNG1 = rw (0xFFF5FC)
+	local RNG2 = rl (0xFFF5FE)
+	local RNG  = RNGroll(RNG1, RNG2)
+	local RNG  = RNGroll(RNG[1], RNG[2])
+	local item = PredictItem(RNG[1])
+	gui.text(0, 46, string.format("%X", item),"yellow")
 end
 
 function Main()
@@ -285,6 +338,7 @@ emu.registerafter(function()
 end)
 
 emu.registerbefore(function()
+	ItemPrediction()
 	Hearts = 0
 end)
 
