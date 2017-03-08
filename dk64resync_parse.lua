@@ -59,6 +59,10 @@ end
 ParseFile() -- bare call
 
 while true do
+	if emu.framecount() == 0 then
+		emu.frameadvance()
+	end
+	
 	local frame = emu.framecount()
 	local original = GetData()
 	local yours = tab[frame]
