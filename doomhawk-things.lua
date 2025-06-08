@@ -27,8 +27,6 @@ local text = gui.text
 
 -- VARIABLES
 local zoom      = 0.17
-local panX      = 0
-local panY      = 0
 local last_size = 0
 local init      = true
 
@@ -37,6 +35,11 @@ local off       = {} -- mobj member offsets in bytes
 local mobjtype  = {}
 local spritenum = {}
 local objects   = {}
+-- view offset
+local pan = {
+	x = 0,
+	y = 0
+}
 -- object positions bounds
 local OB = {
 	top    = maxBoundPos,
@@ -116,12 +119,11 @@ local function iterate()
 	end
 	
 	for k, v in ipairs(objects) do
-		local posX = (v.x + panX) * zoom
-		local posY = (v.y + panY) * zoom
-		if   in_range(posX, 0, client.screenwidth())
-		and  in_range(posY, 0, client.screenheight())
+		local pos = { x = (v.x+pan.x)*zoom, y = (v.y+pan.y)*zoom }
+		if   in_range(pos.x, 0, client.screenwidth())
+		and  in_range(pos.y, 0, client.screenheight())
 		then
-			text(posX, posY,
+			text(pos.x, pos.y,
 		--		v.type
 				string.format("%d\n%d", math.floor(v.x), math.floor(v.y))
 			)	
@@ -151,37 +153,15 @@ function update_zoom()
 	then
 		maybe_swap(OB.right, OB.left)
 		maybe_swap(OB.top,   OB.bottom)
-		local spanX    = OB.right  - OB.left + 200
-		local spanY    = OB.bottom - OB.top  + 200
-		local scaleX   = client.screenwidth()  / spanX
-		local scaleY   = client.screenheight() / spanY
-		zoom = math.min  (scaleX, scaleY)
-		local objectsMiddleX = OB.left + spanX/2
-		local objectsMiddleY = OB.top  + spanY/2
-		local sreenMiddleX   = client.screenwidth() /zoom/2
-		local sreenMiddleY   = client.screenheight()/zoom/2
-		
-		panX = -math.floor(objectsMiddleX - sreenMiddleX)
-		panY = -math.floor(objectsMiddleY - sreenMiddleY)
-		init = false
-		--[ [
-		print(string.format(
-			"w: %s : %s\nh: %s : %s\n"..
-			"OB.top:    %s\nOB.bottom: %s\nOB.left:   %s\nOB.right:  %s\n"..
-			"spanX:     %s\nspanY:     %s\n",
-			client.screenwidth(), sreenMiddleX, client.screenheight(), sreenMiddleY,
-			OB.top, OB.bottom, OB.left, OB.right,
-			spanX, spanY
-		))
-		print(string.format(
-			"objectsMiddleX: %s\nobjectsMiddleY: %s\n"..
-			"objectsMiddleX*zoom: %s\nobjectsMiddleY*zoom: %s\n",
-			objectsMiddleY, objectsMiddleY,
-			objectsMiddleX*zoom, objectsMiddleY*zoom
-		))
-		--]]--
+		local span        = { x = OB.right  - OB.left + 200, y = OB.bottom - OB.top  + 200 }
+		local scale       = { x = client.screenwidth()/span.x, y = client.screenheight()/span.y }
+		local spanCenter  = { x = OB.left+span.x/2, y = OB.top+span.y/2 }
+		      zoom        = math.min(scale.x, scale.y)
+		local sreenCenter = { x = client.screenwidth()/zoom/2, y = client.screenheight()/zoom/2 }
+		      pan.x       = -math.floor(spanCenter.x - sreenCenter.x)
+		      pan.y       = -math.floor(spanCenter.y - sreenCenter.y)
+		      init        = false
 	end
-
 end
 
 local function make_button(x, y, name, func)
@@ -227,19 +207,19 @@ local function zoom_in()
 end
 
 local function pan_left()
-	panX = panX + panFactor
+	pan.x = pan.x + panFactor
 end
 
 local function pan_right()
-	panX = panX - panFactor
+	pan.x = pan.x - panFactor
 end
 
 local function pan_up()
-	panY = panY + panFactor
+	pan.y = pan.y + panFactor
 end
 
 local function pan_down()
-	panY = panY - panFactor
+	pan.y = pan.y - panFactor
 end
 
 local function add_offset(size, name)
