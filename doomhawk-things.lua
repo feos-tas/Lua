@@ -2,9 +2,12 @@
 local null_mobj     = 0x88888888 -- no object at that index
 local out_of_bounds = 0xFFFFFFFF -- no such index
 local zoomFactor    = 0.02
-local panFactor     = 100
+local minZoom       = 0.0001 -- ???
+local panFactor     = 10
 local charWidth     = 10
 local charHeight    = 16
+local maxBoundPos   = 0x7fffffffffffffff
+local maxBoundNeg   = 0x8000000000000000
 
 -- sizes in bytes
 local short   = 2
@@ -19,23 +22,31 @@ local rb  = memory.read_u8_le
 local rls = memory.read_s32_le
 local rws = memory.read_s16_le
 local rbs = memory.read_s8_le
+local text = gui.text
+--local text = gui.pixelText
 
 -- VARIABLES
-local zoom      = 1
+local zoom      = 0.17
 local panX      = 0
 local panY      = 0
 local last_size = 0
+local init      = true
 
 -- tables
 local off       = {} -- mobj member offsets in bytes
 local mobjtype  = {}
 local spritenum = {}
-local bounds = {
-	top    = 0x7fffffffffffffff,
-	left   = 0x7fffffffffffffff,
-	bottom = 0x8000000000000000,
-	right  = 0x8000000000000000,
-	init   = true
+local objects   = {}
+-- object positions bounds
+local OB = {
+	top    = maxBoundPos,
+	left   = maxBoundPos,
+	bottom = maxBoundNeg,
+	right  = maxBoundNeg
+}
+local lastScreenSize = {
+	w = client.screenwidth(),
+	h = client.screenheight()
 }
 
 gui.defaultPixelFont("fceux")
@@ -63,14 +74,14 @@ end
 local function in_range(var, minimum, maximum)
 	return var >= minimum and var <= maximum
 end
+
 local function iterate()
-	for index = 0, 100000 do
-		local addr    = index * mobj_t
+	for i = 0, 100000 do
+		local addr = i * mobj_t
 		if addr > 0xFFFFFF then break end
 		
 		local thinker = rl(addr) & 0xFFFFFFFF -- just to check if mobj is there
 		if thinker == out_of_bounds then break end
---[ [--
 		
 		if thinker ~= null_mobj then
 			local x      = rls(addr + off.x) / 0xffff
@@ -78,39 +89,99 @@ local function iterate()
 			local z      = rls(addr + off.z) / 0xffff
 			local type   = rl(addr + off.type)
 			local sprite = rl(addr + off.sprite)
-			local i      = rl(addr + off.index)
+			local index  = rl(addr + off.index)
 			local tics   = rl(addr + off.tics)
-			local posX   = (x + panX) * zoom
-			local posY   = (y + panY) * zoom
-			type = mobjtype[type]
+			type         = mobjtype[type]
 			
 		--	if type > 0 and type < 0x8d then
 			--	print(string.format("%d %f %f %02X", index, x, y, type))
 			if type and not string.find(type, "MISC") then
-				if bounds.init then
-					if x < bounds.left   then bounds.left   = x end
-					if x > bounds.right  then bounds.right  = x end
-					if y < bounds.top    then bounds.top    = y end
-					if y > bounds.bottom then bounds.bottom = y end
+				if init then
+					if x < OB.left   then OB.left   = x end
+					if x > OB.right  then OB.right  = x end
+					if y < OB.top    then OB.top    = y end
+					if y > OB.bottom then OB.bottom = y end
+					
+					-- cache the objects we need
+					table.insert(objects, {
+					--	index= index,
+						x    = x,
+						y    = y,
+						type = type
+					})
 				end
-				gui.pixelText(posX, posY, string.format("%f\n%f", x, y))
 		--	end
 			end
 		end
---]]--
 	end
-		
-	if bounds.init then
-		local spanX = bounds.right - bounds.left
-		local spanY = bounds.top   - bounds.bottom
-		
-		panX =  math.floor(bounds.left) + 100
-		panY = -math.floor(bounds.top)  - 100
-		
-		bounds.init = false
-		
-		print(bounds)
+	
+	for k, v in ipairs(objects) do
+		local posX = (v.x + panX) * zoom
+		local posY = (v.y + panY) * zoom
+		if   in_range(posX, 0, client.screenwidth())
+		and  in_range(posY, 0, client.screenheight())
+		then
+			text(posX, posY,
+		--		v.type
+				string.format("%d\n%d", math.floor(v.x), math.floor(v.y))
+			)	
+		end
 	end
+end
+
+function maybe_swap(left, right)
+	if left > right then
+		local smallest = right
+		right = left
+		left = smallest
+	end
+end
+
+function update_zoom()
+	if not init
+	and lastScreenSize.w == client.screenwidth()
+	and lastScreenSize.h == client.screenheight()
+	then return end
+	
+	if  OB.top    ~= maxBoundPos
+	and OB.left   ~= maxBoundPos
+	and OB.right  ~= maxBoundNeg
+	and OB.bottom ~= maxBoundNeg
+	and not emu.islagged()
+	then
+		maybe_swap(OB.right, OB.left)
+		maybe_swap(OB.top,   OB.bottom)
+		local spanX    = OB.right  - OB.left + 200
+		local spanY    = OB.bottom - OB.top  + 200
+		local scaleX   = client.screenwidth()  / spanX
+		local scaleY   = client.screenheight() / spanY
+		zoom = math.min  (scaleX, scaleY)
+		local objectsMiddleX = OB.left + spanX/2
+		local objectsMiddleY = OB.top  + spanY/2
+		local sreenMiddleX   = client.screenwidth() /zoom/2
+		local sreenMiddleY   = client.screenheight()/zoom/2
+		
+		panX = -math.floor(objectsMiddleX - sreenMiddleX)
+		panY = -math.floor(objectsMiddleY - sreenMiddleY)
+		init = false
+		--[ [
+		print(string.format(
+			"w: %s : %s\nh: %s : %s\n"..
+			"OB.top:    %s\nOB.bottom: %s\nOB.left:   %s\nOB.right:  %s\n"..
+			"spanX:     %s\nspanY:     %s\n",
+			client.screenwidth(), sreenMiddleX, client.screenheight(), sreenMiddleY,
+			OB.top, OB.bottom, OB.left, OB.right,
+			spanX, spanY
+		))
+		print(string.format(
+			"objectsMiddleX: %s\nobjectsMiddleY: %s\n"..
+			"objectsMiddleX*zoom: %s\nobjectsMiddleY*zoom: %s\n",
+			objectsMiddleY, objectsMiddleY,
+			objectsMiddleX*zoom, objectsMiddleY*zoom
+		))
+		--]]--
+	end
+
 end
 
 local function make_button(x, y, name, func)
@@ -120,37 +191,39 @@ local function make_button(x, y, name, func)
 	      longest    = get_line_count(name)
 	local textWidth  = longest  *charWidth
 	local textHeight = lineCount*charHeight
-	local colors     = { 0x66ffffff, 0xccffffff, 0xccffff00 }
+	local colors     = { 0x66bbddff, 0xaabbddff, 0xaa88aaff }
 	local colorIndex = 1
 	
 	if textWidth  + 10 > boxWidth  then boxWidth  = textWidth  + 10 end
 	if textHeight + 10 > boxHeight then boxHeight = textHeight + 10 end
 	
-	local textX = x + boxWidth /2 - textWidth /2
-	local textY = y + boxHeight/2 - textHeight/2 - boxHeight
+	local textX    = x + boxWidth /2 - textWidth /2
+	local textY    = y + boxHeight/2 - textHeight/2 - boxHeight
+	local mouse    = input.getmouse()
+	local mousePos = client.transformPoint(mouse.X, mouse.Y)
 	
-	local mouse = input.getmouse()
-	local scaleX = client.screenwidth()  / client.bufferwidth()
-	local scaleY = client.screenheight() / client.bufferheight()
-	
-	if  in_range(mouse.X*scaleX, x, x+boxWidth)
-	and in_range(mouse.Y*scaleY, y-boxHeight, y) then
+	if  in_range(mousePos.x, x, x+boxWidth)
+	and in_range(mousePos.y, y-boxHeight, y) then
 		if mouse.Left then
 			colorIndex = 3
 			func()
 		else colorIndex = 2 end
 	end
 	
-	gui.drawBox(x, y, x+boxWidth, y-boxHeight, "white", colors[colorIndex])
-	gui.text(textX, textY, name)
+	gui.drawBox(x, y, x+boxWidth, y-boxHeight, 0xaaffffff, colors[colorIndex])
+	text(textX, textY, name, colors[colorIndex] | 0xff000000) -- full alpha
 end
 
 local function zoom_out()
-	zoom = zoom * (1 - zoomFactor)
+	local newZoom = zoom * (1 - zoomFactor)
+	if newZoom < minZoom then return end
+	zoom = newZoom
+	--panFactor = math.floor(panFactor / zoom)
 end
 
 local function zoom_in()
 	zoom = zoom * (1 + zoomFactor)
+	--panFactor = math.floor(panFactor / zoom)
 end
 
 local function pan_left()
@@ -584,14 +657,20 @@ spritenum = {
 }
 
 while true do
-	iterate()
+	iterate()	
+	update_zoom()
+	--[ [--
 	make_button( 10, client.screenheight()- 70, "Zoom\nIn"  , zoom_in)
 	make_button( 10, client.screenheight()- 10, "Zoom\nOut" , zoom_out)
 	make_button( 80, client.screenheight()- 40, "Pan\nLeft" , pan_left)
 	make_button(150, client.screenheight()- 70, "Pan \nUp"  , pan_up)
 	make_button(150, client.screenheight()- 10, "Pan\nDown" , pan_down)
 	make_button(220, client.screenheight()- 40, "Pan\nRight", pan_right)
-	gui.text   ( 10, client.screenheight()-170, string.format(
-		"Zoom:  %s\nPan X: %s\nPan Y: %s", zoom, panX, panY))	
+	text(10, client.screenheight()-170, string.format(
+		"Zoom: %.4f\nPanX: %s\nPanY: %s", zoom, panX, panY), 0xffbbddff)
+--	text(10, 270, string.format("DB: %d %d", DB.left, DB.top))
+	lastScreenSize.w = client.screenwidth()
+	lastScreenSize.h = client.screenheight()
+	--]]--
 	emu.frameadvance()
 end
