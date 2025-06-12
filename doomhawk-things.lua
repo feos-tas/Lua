@@ -1,5 +1,5 @@
 -- CONSTANTS
-local null_mobj     = 0x88888888 -- no object at that index
+local null_object   = 0x88888888 -- no object at that index
 local out_of_bounds = 0xFFFFFFFF -- no such index
 local zoomFactor    = 0.02
 local minZoom       = 0.0001 -- ???
@@ -8,25 +8,26 @@ local charWidth     = 10
 local charHeight    = 16
 local maxBoundPos   = 0x7fffffffffffffff
 local maxBoundNeg   = 0x8000000000000000
-
 -- sizes in bytes
-local short   = 2
-local int     = 4
-local pointer = 8
-local mobj_t  = 512 -- sizeof(mobj_t) is 464, but we padded it for niceness
-
+local short         = 2
+local int           = 4
+local pointer       = 8
+local mobj_t        = 512 -- sizeof(mobj_t) is 464, but we padded it for niceness
+local line_t        = 256 -- sizeof(mobj_t) is 232, but we padded it for niceness
 -- shortcuts
-local rl  = memory.read_u32_le
-local rw  = memory.read_u16_le
-local rb  = memory.read_u8_le
-local rls = memory.read_s32_le
-local rws = memory.read_s16_le
-local rbs = memory.read_s8_le
-local text = gui.text
---local text = gui.pixelText
+local rl            = memory.read_u32_le
+local rw            = memory.read_u16_le
+local rb            = memory.read_u8_le
+local rls           = memory.read_s32_le
+local rws           = memory.read_s16_le
+local rbs           = memory.read_s8_le
+local text          = gui.text
+local box           = gui.drawBox
+local line          = gui.drawLine
+--local text        = gui.pixelText -- INSANELY SLOW
 
 -- VARIABLES
-local zoom      = 0.17
+local zoom      = 1
 local last_size = 0
 local init      = true
 
@@ -55,6 +56,63 @@ local lastScreenSize = {
 gui.defaultPixelFont("fceux")
 gui.use_surface("client")
 
+local function mapify_x(coord)
+	return math.floor(((coord / 0xffff)+pan.x)*zoom)
+end
+
+local function mapify_y(coord)
+	return math.floor(((coord / 0xffff)+pan.y)*zoom)
+end
+
+local function in_range(var, minimum, maximum)
+	return var >= minimum and var <= maximum
+end
+
+local function reset_view()
+	init = true
+	update_zoom()
+end
+
+local function zoom_out()
+	local newZoom = zoom * (1 - zoomFactor)
+	if newZoom < minZoom then return end
+	zoom = newZoom
+end
+
+local function zoom_in()
+	zoom = zoom * (1 + zoomFactor)
+end
+
+local function pan_left()
+	pan.x = pan.x + panFactor/zoom/2
+end
+
+local function pan_right()
+	pan.x = pan.x - panFactor/zoom/2
+end
+
+local function pan_up()
+	pan.y = pan.y + panFactor/zoom/2
+end
+
+local function pan_down()
+	pan.y = pan.y - panFactor/zoom/2
+end
+
+local function add_offset(size, name)
+	off[name] = last_size
+--	print(name, string.format("%X \t\t %X", size, last_size))
+	last_size = size + last_size
+end
+
+function maybe_swap(left, right)
+	if left > right then
+		local smallest = right
+		right = left
+		left = smallest
+	end
+end
+
 local function get_line_count(str)
 	local lines = 1
 	local longest = 0
@@ -74,11 +132,62 @@ local function get_line_count(str)
 	return lines, longest
 end
 
-local function in_range(var, minimum, maximum)
-	return var >= minimum and var <= maximum
+local function iterate()
+	if init then return end
+	
+	for _, addr in ipairs(objects) do
+		local x      = rls(addr + off.x)
+		local y      = rls(addr + off.y) * -1
+		local health = rls(addr + off.health)
+		local radius = math.floor((rls(addr + off.radius) >> 16) * zoom)
+		local sprite = spritenum[rls(addr + off.sprite)]
+		local type   = rl(addr + off.type)
+		local pos    = { x = mapify_x(x), y = mapify_y(y) }
+		local color  = "white"
+			
+		if type == 0
+		then type = "PLAYER" print("PLAYER")
+		else type = mobjtype[type]
+		end
+		if health <= 0 then color = "red" end
+		--[[--
+		local z      = rls(addr + off.z) / 0xffff
+		local index  = rl (addr + off.index)
+		local tics   = rl (addr + off.tics)
+		--]]--
+		if  in_range(pos.x, 0, client.screenwidth())
+		and in_range(pos.y, 0, client.screenheight())
+		then
+		--	text(pos.x, pos.y, string.format("%s", type), color)
+			box(pos.x - radius, pos.y - radius, pos.x + radius, pos.y + radius, color)
+		end
+	end
+	
+	for i = 0, 100000 do
+		local addr = i * line_t
+		if addr > 0xFFFFFF then break end
+		
+		local id = rl(addr, "Lines") & 0xFFFFFFFF
+		if id == out_of_bounds then break end
+		
+		if id ~= null_object then
+			local vertices_offset = 0xe8
+			local v1 = { x =  rls(addr+vertices_offset   , "Lines"),
+						 y = -rls(addr+vertices_offset+ 4, "Lines") }
+			local v2 = { x =  rls(addr+vertices_offset+ 8, "Lines"),
+						 y = -rls(addr+vertices_offset+12, "Lines") }
+			line(
+				mapify_x(v1.x),
+				mapify_y(v1.y),
+				mapify_x(v2.x),
+				mapify_y(v2.y),
+				0xffcccccc
+			)
+		end
+	end
 end
 
-local function iterate()
+local function init_objects()
 	for i = 0, 100000 do
 		local addr = i * mobj_t
 		if addr > 0xFFFFFF then break end
@@ -86,56 +195,27 @@ local function iterate()
 		local thinker = rl(addr) & 0xFFFFFFFF -- just to check if mobj is there
 		if thinker == out_of_bounds then break end
 		
-		if thinker ~= null_mobj then
-			local x      = rls(addr + off.x) / 0xffff
-			local y      = rls(addr + off.y) / 0xffff * -1
-			local z      = rls(addr + off.z) / 0xffff
-			local type   = rl(addr + off.type)
-			local sprite = rl(addr + off.sprite)
-			local index  = rl(addr + off.index)
-			local tics   = rl(addr + off.tics)
-			type         = mobjtype[type]
+		if thinker ~= null_object then
+			local x    = rls(addr + off.x) / 0xffff
+			local y    = rls(addr + off.y) / 0xffff * -1
+			local type = rl(addr + off.type)
 			
-		--	if type > 0 and type < 0x8d then
-			--	print(string.format("%d %f %f %02X", index, x, y, type))
-			if type and not string.find(type, "MISC") then
-				if init then
-					if x < OB.left   then OB.left   = x end
-					if x > OB.right  then OB.right  = x end
-					if y < OB.top    then OB.top    = y end
-					if y > OB.bottom then OB.bottom = y end
-					
-					-- cache the objects we need
-					table.insert(objects, {
-					--	index= index,
-						x    = x,
-						y    = y,
-						type = type
-					})
-				end
-		--	end
+			if type == 0
+			then type = "PLAYER" print("PLAYER")
+			else type = mobjtype[type]
+			end
+		--	print(string.format("%d %f %f %02X", index, x, y, type))
+			if type
+			and not string.find(type, "MISC")
+			then
+				if x < OB.left   then OB.left   = x end
+				if x > OB.right  then OB.right  = x end
+				if y < OB.top    then OB.top    = y end
+				if y > OB.bottom then OB.bottom = y end
+				-- cache the objects we need
+				table.insert(objects, addr)
 			end
 		end
-	end
-	
-	for k, v in ipairs(objects) do
-		local pos = { x = (v.x+pan.x)*zoom, y = (v.y+pan.y)*zoom }
-		if   in_range(pos.x, 0, client.screenwidth())
-		and  in_range(pos.y, 0, client.screenheight())
-		then
-			text(pos.x, pos.y,
-		--		v.type
-				string.format("%d\n%d", math.floor(v.x), math.floor(v.y))
-			)	
-		end
-	end
-end
-
-function maybe_swap(left, right)
-	if left > right then
-		local smallest = right
-		right = left
-		left = smallest
 	end
 end
 
@@ -153,7 +233,7 @@ function update_zoom()
 	then
 		maybe_swap(OB.right, OB.left)
 		maybe_swap(OB.top,   OB.bottom)
-		local span        = { x = OB.right  - OB.left + 200, y = OB.bottom - OB.top  + 200 }
+		local span        = { x = OB.right-OB.left+200, y = OB.bottom-OB.top+200 }
 		local scale       = { x = client.screenwidth()/span.x, y = client.screenheight()/span.y }
 		local spanCenter  = { x = OB.left+span.x/2, y = OB.top+span.y/2 }
 		      zoom        = math.min(scale.x, scale.y)
@@ -190,42 +270,8 @@ local function make_button(x, y, name, func)
 		else colorIndex = 2 end
 	end
 	
-	gui.drawBox(x, y, x+boxWidth, y-boxHeight, 0xaaffffff, colors[colorIndex])
+	box(x, y, x+boxWidth, y-boxHeight, 0xaaffffff, colors[colorIndex])
 	text(textX, textY, name, colors[colorIndex] | 0xff000000) -- full alpha
-end
-
-local function zoom_out()
-	local newZoom = zoom * (1 - zoomFactor)
-	if newZoom < minZoom then return end
-	zoom = newZoom
-	--panFactor = math.floor(panFactor / zoom)
-end
-
-local function zoom_in()
-	zoom = zoom * (1 + zoomFactor)
-	--panFactor = math.floor(panFactor / zoom)
-end
-
-local function pan_left()
-	pan.x = pan.x + panFactor
-end
-
-local function pan_right()
-	pan.x = pan.x - panFactor
-end
-
-local function pan_up()
-	pan.y = pan.y + panFactor
-end
-
-local function pan_down()
-	pan.y = pan.y - panFactor
-end
-
-local function add_offset(size, name)
-	off[name] = last_size
---	print(name, string.format("%X \t\t %X", size, last_size))
-	last_size = size + last_size
 end
 
 --[[--
@@ -637,20 +683,20 @@ spritenum = {
 }
 
 while true do
+	if init then init_objects() end
 	iterate()	
 	update_zoom()
-	--[ [--
-	make_button( 10, client.screenheight()- 70, "Zoom\nIn"  , zoom_in)
-	make_button( 10, client.screenheight()- 10, "Zoom\nOut" , zoom_out)
-	make_button( 80, client.screenheight()- 40, "Pan\nLeft" , pan_left)
-	make_button(150, client.screenheight()- 70, "Pan \nUp"  , pan_up)
-	make_button(150, client.screenheight()- 10, "Pan\nDown" , pan_down)
-	make_button(220, client.screenheight()- 40, "Pan\nRight", pan_right)
+	make_button( 10, client.screenheight()-70, "Zoom\nIn"   , zoom_in   )
+	make_button( 10, client.screenheight()-10, "Zoom\nOut"  , zoom_out  )
+	make_button( 80, client.screenheight()-40, "Pan\nLeft"  , pan_left  )
+	make_button(150, client.screenheight()-70, "Pan \nUp"   , pan_up    )
+	make_button(150, client.screenheight()-10, "Pan\nDown"  , pan_down  )
+	make_button(220, client.screenheight()-40, "Pan\nRight" , pan_right )
+	make_button(300, client.screenheight()-10, "Reset\nView", reset_view)
 	text(10, client.screenheight()-170, string.format(
-		"Zoom: %.4f\nPanX: %s\nPanY: %s", zoom, panX, panY), 0xffbbddff)
---	text(10, 270, string.format("DB: %d %d", DB.left, DB.top))
+		"Zoom: %.4f\nPanX: %s\nPanY: %s", 
+		zoom, pan.x, pan.y), 0xffbbddff)
 	lastScreenSize.w = client.screenwidth()
 	lastScreenSize.h = client.screenheight()
-	--]]--
 	emu.frameadvance()
 end
