@@ -30,7 +30,6 @@ local line          = gui.drawLine
 local zoom      = 1
 local last_size = 0
 local init      = true
-
 -- tables
 local off       = {} -- mobj member offsets in bytes
 local mobjtype  = {}
